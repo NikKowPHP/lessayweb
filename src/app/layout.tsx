@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import ReduxProvider from '@/store/provider'
 import Layout from '@/components/layout/Layout'
 import '@/styles/globals.css'
+import { ErrorProvider } from '@/providers/ErrorProvider'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -33,7 +34,9 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <ReduxProvider>
-          <Layout>{children}</Layout>
+          <ErrorProvider>
+            <Layout>{children}</Layout>
+          </ErrorProvider>
         </ReduxProvider>
       </body>
     </html>

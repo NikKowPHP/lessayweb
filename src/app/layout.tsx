@@ -1,5 +1,7 @@
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import type { Metadata } from "next";
+import { Providers } from "@/store/provider";
+import Layout from "@/components/layout/Layout";
 import "@/styles/globals.css";
 
 const inter = Inter({ 
@@ -25,10 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <div className="pt-20">
-          <main className="flex-1">{children}</main>
-        </div>
+        <Providers>
+          <Layout>
+            {children}
+          </Layout>
+        </Providers>
       </body>
     </html>
   );
-}
+} 

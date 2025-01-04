@@ -20,7 +20,7 @@ Okay, let's break down the implementation of the frontend for the "lessay" web a
 
 **Step 4: Create Basic App Structure and Navigation**
 
-1. **Folder Structure:** Organize your project with folders like `components`, `pages`, `public`, `styles`, `lib`, `context`, and `hooks`, as described in the Code Structure section.
+1. **Folder Structure:** Organize your project with folders like in src `components`, `pages`, `public`, `styles`, `lib`, `context`, and `hooks`, as described in the Code Structure section.
 2. **Pages:** Start creating basic pages within the `pages` directory. For example:
     *   `index.tsx` (Landing Page)
     *   `learning/path.tsx` (Learning Path Page)

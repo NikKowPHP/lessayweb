@@ -18,7 +18,7 @@ Consistency: Enforce a consistent coding style and project structure across the 
 
 2. Core Principles
 
-Senior-Level Code: All code must be written at a senior developer level, demonstrating a deep understanding of JavaScript/TypeScript, React, Next.js, and web development best practices.
+Senior-Level Code: All code must be written at a senior developer level, demonstrating a deep understanding of JavaScript/TypeScript, React, Next.js the latest version 13+, and web development best practices.
 
 Strict Adherence: These standards are not optional. All developers are required to follow them strictly. Deviations must be justified and approved by the lead developer.
 

@@ -20,6 +20,8 @@ Consistency: Enforce a consistent coding style and project structure across the 
 
 Senior-Level Code: All code must be written at a senior developer level, demonstrating a deep understanding of JavaScript/TypeScript, React, Next.js the latest version 13+, and web development best practices.
 
+Project flow: ui -> provider ->  service -> session storage <-> api service 
+
 Strict Adherence: These standards are not optional. All developers are required to follow them strictly. Deviations must be justified and approved by the lead developer.
 
 Code Reviews: All code must undergo thorough code reviews by at least one other senior developer before being merged into the main branch.

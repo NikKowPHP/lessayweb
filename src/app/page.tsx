@@ -1,5 +1,4 @@
 import { Suspense } from 'react'
-import { Button } from '@/components/ui/button/button'
 
 export default function HomePage() {
   return (
@@ -24,19 +23,6 @@ export default function HomePage() {
               Designing User-Friendly Technology for Better Patient Experiences, from Apps to Devices
             </p>
             <div className="flex gap-4 pt-4">
-              <Button 
-                size="lg" 
-                className="rounded-full px-8 h-12 text-base bg-[#0066FF] hover:bg-[#0066FF]/90"
-              >
-                Book a call
-              </Button>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="rounded-full px-8 h-12 text-base border-[#0066FF] text-[#0066FF] hover:bg-[#0066FF]/10"
-              >
-                Learn more
-              </Button>
             </div>
           </section>
         </Suspense>

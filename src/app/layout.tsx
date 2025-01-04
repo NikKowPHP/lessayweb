@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Header } from "@/components/layout/header/header";
 import "@/styles/globals.css";
-import { Providers } from './providers'
 
 const inter = Inter({ 
   subsets: ["latin"],
@@ -12,10 +10,10 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Ziro Health",
-    template: "%s | Ziro Health"
+    default: "lessay",
+    template: "%s | lessay"
   },
-  description: "Healthcare platform for modern practices",
+  description: "Personalized language learning web app using AI to tailor the learning path based on an initial skills assessment.",
   viewport: "width=device-width, initial-scale=1",
 };
 
@@ -27,7 +25,6 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Header />
         <div className="pt-20">
           <main className="flex-1">{children}</main>
         </div>

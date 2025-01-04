@@ -1,10 +1,11 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { authService, AuthCredentials } from '@/services/authService'
+import { authService, AuthCredentials, SocialProvider } from '@/services/authService'
 
 interface UserState {
   id: string | null
   name: string | null
   email: string | null
+  provider: 'email' | 'google' | 'github' | null
   nativeLanguage: string | null
   targetLanguage: string | null
   isAuthenticated: boolean
@@ -16,6 +17,7 @@ const initialState: UserState = {
   id: null,
   name: null,
   email: null,
+  provider: null,
   nativeLanguage: null,
   targetLanguage: null,
   isAuthenticated: false,
@@ -50,6 +52,21 @@ export const signup = createAsyncThunk(
   }
 )
 
+export const socialAuth = createAsyncThunk(
+  'user/socialAuth',
+  async (provider: SocialProvider, { rejectWithValue }) => {
+    try {
+      const response = await authService.socialAuth(provider)
+      localStorage.setItem('token', response.token)
+      return response.user
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : `${provider} authentication failed`
+      )
+    }
+  }
+)
+
 export const logout = createAsyncThunk(
   'user/logout',
   async () => {
@@ -79,6 +96,7 @@ const userSlice = createSlice({
         state.id = action.payload.id
         state.name = action.payload.name
         state.email = action.payload.email
+        state.provider = action.payload.provider || 'email'
       })
       .addCase(login.rejected, (state, action) => {
         state.loading = false
@@ -95,8 +113,26 @@ const userSlice = createSlice({
         state.id = action.payload.id
         state.name = action.payload.name
         state.email = action.payload.email
+        state.provider = action.payload.provider || 'email'
       })
       .addCase(signup.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+      // Social Auth
+      .addCase(socialAuth.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(socialAuth.fulfilled, (state, action) => {
+        state.loading = false
+        state.isAuthenticated = true
+        state.id = action.payload.id
+        state.name = action.payload.name
+        state.email = action.payload.email
+        state.provider = action.payload.provider as 'google' | 'github' | 'email'
+      })
+      .addCase(socialAuth.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

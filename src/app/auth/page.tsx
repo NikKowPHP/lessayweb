@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { login, signup, socialAuth } from '@/store/slices/authSlice'
 import { useError } from '@/providers/ErrorProvider'
+import { selectNeedsOnboarding } from '@/store/slices/userSlice'
 
 type FormData = {
   email: string
@@ -20,6 +21,7 @@ export default function AuthPage() {
   const dispatch = useAppDispatch()
   const { loading } = useAppSelector((state) => state.auth)
   const { setError } = useError()
+  const needsOnboarding = useAppSelector(selectNeedsOnboarding)
 
   const {
     register,
@@ -34,7 +36,11 @@ export default function AuthPage() {
       const result = await dispatch(action).unwrap()
 
       if (result) {
-        router.push('/learning/path')
+        if (needsOnboarding) {
+          router.push('/onboarding')
+        } else {
+          router.push('/learning/path')
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -46,7 +52,11 @@ export default function AuthPage() {
       setError(null)
       const result = await dispatch(socialAuth(provider)).unwrap()
       if (result) {
-        router.push('/learning/path')
+        if (needsOnboarding) {
+          router.push('/onboarding')
+        } else {
+          router.push('/learning/path')
+        }
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed')

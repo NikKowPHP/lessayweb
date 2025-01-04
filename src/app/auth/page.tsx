@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { login, signup, socialAuth } from '@/store/slices/userSlice'
+import { login, signup, socialAuth } from '@/store/slices/authSlice'
 import { useError } from '@/providers/ErrorProvider'
 
 type FormData = {
@@ -18,7 +18,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('login')
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const { loading } = useAppSelector((state) => state.user)
+  const { loading } = useAppSelector((state) => state.auth)
   const { setError } = useError()
 
   const {

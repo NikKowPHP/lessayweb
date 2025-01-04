@@ -1,6 +1,6 @@
 import { Inter } from "next/font/google";
 import type { Metadata } from "next";
-import { Providers } from "@/store/provider";
+import ReduxProvider from '@/store/provider'
 import Layout from "@/components/layout/Layout";
 import "@/styles/globals.css";
 
@@ -27,11 +27,11 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <Providers>
+        <ReduxProvider>
           <Layout>
             {children}
           </Layout>
-        </Providers>
+        </ReduxProvider>
       </body>
     </html>
   );

@@ -1,10 +1,18 @@
 'use client'
 
+import { useEffect } from 'react'
 import Link from 'next/link'
-import { useAppSelector } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { initializeAuth, logout } from '@/store/slices/authSlice'
 
 const Navbar = () => {
-  const isAuthenticated = useAppSelector((state) => state.user.isAuthenticated)
+  const dispatch = useAppDispatch()
+  const { isAuthenticated, loading } = useAppSelector((state) => state.auth)
+  const { name } = useAppSelector((state) => state.user)
+
+  useEffect(() => {
+    dispatch(initializeAuth())
+  }, [dispatch])
 
   return (
     <nav className="fixed top-0 left-0 right-0 bg-white shadow-sm z-50">

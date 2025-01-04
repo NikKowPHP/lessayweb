@@ -1,7 +1,8 @@
 import { Api } from './Api'
+import { IAuthApi } from './interfaces/IAuthApi'
 import { AuthResponse, AuthCredentials, SocialProvider } from '@/types/auth'
 
-class AuthApi extends Api {
+export class AuthApi extends Api implements IAuthApi {
   private static instance: AuthApi
   private static readonly ENDPOINTS = {
     LOGIN: '/auth/login',

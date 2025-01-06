@@ -45,7 +45,6 @@ export default function OnboardingPage() {
     }
 
     try {
-      // Submit language preferences using the onboarding action
       await dispatch(
         submitLanguagePreferences({
           nativeLanguage: nativeLanguage as LanguageCode,
@@ -53,7 +52,6 @@ export default function OnboardingPage() {
         })
       ).unwrap()
 
-      // Update languages in Redux store using the new async thunk
       await dispatch(
         updateUserLanguages({
           native: nativeLanguage,
@@ -61,11 +59,8 @@ export default function OnboardingPage() {
         })
       ).unwrap()
 
-      // Mark onboarding as completed using the new async thunk
-      await dispatch(completeUserOnboarding()).unwrap()
-
-      // Redirect to learning path
-      router.push('/learning/path')
+      // Instead of completing onboarding, redirect to assessment intro
+      router.push('/onboarding/assessment/intro')
     } catch (err) {
       setError('Failed to save language preferences')
     }

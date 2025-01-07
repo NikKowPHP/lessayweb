@@ -5,6 +5,7 @@ import type {
   AssessmentQuestion,
   AssessmentResult,
   LanguagePreferences,
+  AssessmentResultResponse,
 } from './interfaces/IOnboardingApi'
 
 export class OnboardingApi extends Api implements IOnboardingApi {
@@ -14,6 +15,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     GET_LANGUAGES: '/onboarding/languages',
     START_ASSESSMENT: '/onboarding/assessment/start',
     SUBMIT_ASSESSMENT: '/onboarding/assessment/submit',
+    GET_ASSESSMENT_RESULTS: '/onboarding/assessment/results',
   }
 
   private constructor() {
@@ -82,6 +84,13 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return {
       data: response,
     }
+  }
+
+  async getAssessmentResults(assessmentId: string): Promise<AssessmentResultResponse> {
+    const response = await this.get<AssessmentResultResponse>(
+      `${OnboardingApi.ENDPOINTS.GET_ASSESSMENT_RESULTS}/${assessmentId}`
+    )
+    return response
   }
 }
 

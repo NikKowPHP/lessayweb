@@ -4,6 +4,7 @@ import type {
   IOnboardingApi,
   AssessmentQuestion,
   LanguagePreferences,
+  AssessmentResultResponse,
 } from './interfaces/IOnboardingApi'
 
 // Configure localforage instance for onboarding data
@@ -110,6 +111,26 @@ export class MockOnboardingApi implements IOnboardingApi {
           vocabulary: 'Excellent',
         },
       },
+    }
+  }
+
+  async getAssessmentResults(assessmentId: string): Promise<AssessmentResultResponse> {
+    await this.delay(1000)
+    console.log('assessmentId', assessmentId)
+
+    // Return mock assessment results
+    return {
+      pronunciation: 75,
+      vocabulary: 80,
+      grammar: 70,
+      comprehension: 85,
+      overall: 77.5,
+      level: 'intermediate',
+      nextSteps: [
+        'Practice pronunciation of "th" sounds',
+        'Review past tense conjugations',
+        'Build vocabulary in business context'
+      ]
     }
   }
 } 

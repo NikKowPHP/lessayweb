@@ -54,7 +54,7 @@ export const submitLanguagePreferences = createAsyncThunk(
   'onboarding/submitLanguagePreferences',
   async (preferences: { nativeLanguage: LanguageCode; targetLanguage: LanguageCode }) => {
     const response = await onboardingService.submitLanguagePreferences(preferences)
-    return response.data
+    return response
   }
 )
 
@@ -63,7 +63,7 @@ export const startAssessment = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await onboardingService.startAssessment()
-      return response.data
+      return response
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Failed to start assessment'
@@ -85,7 +85,7 @@ export const submitAssessmentAnswer = createAsyncThunk(
         questionId,
         answer,
       })
-      return response.data
+      return response
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Failed to submit answer'
@@ -99,10 +99,13 @@ export const getAssessmentResults = createAsyncThunk(
   async (_, { rejectWithValue, getState }) => {
     try {
       const state = getState() as { onboarding: OnboardingState }
+      if (!state.onboarding.assessmentId) {
+        throw new Error('No assessment ID found')
+      }
       const response = await onboardingService.getAssessmentResults(
-        state.onboarding.assessmentId!
+        state.onboarding.assessmentId
       )
-      return response.data
+      return response
     } catch (error) {
       return rejectWithValue(
         error instanceof Error ? error.message : 'Failed to get assessment results'

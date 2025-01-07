@@ -22,6 +22,30 @@ export interface LanguagePreferences {
   targetLanguage: LanguageCode
 }
 
+
+
+
+export interface LanguagePreferencesResponse {
+  success: boolean
+  nativeLanguage: LanguageCode
+  targetLanguage: LanguageCode
+}
+
+export interface AssessmentResponse {
+  assessmentId: string
+  questions: AssessmentQuestion[]
+}
+
+export interface AssessmentResultResponse {
+  pronunciation: number
+  vocabulary: number
+  grammar: number
+  comprehension: number
+  overall: number
+  level: 'beginner' | 'intermediate' | 'advanced'
+  nextSteps: string[]
+}
+
 export interface IOnboardingApi {
   submitLanguages(
     nativeLanguage: LanguageCode,
@@ -40,4 +64,6 @@ export interface IOnboardingApi {
   }>
   
   getStoredLanguages(): Promise<LanguagePreferences | null>
+  
+  getAssessmentResults(assessmentId: string): Promise<AssessmentResultResponse>
 } 

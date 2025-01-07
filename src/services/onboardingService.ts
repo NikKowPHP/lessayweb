@@ -1,7 +1,8 @@
 import type { LanguageCode } from '@/constants/languages'
-import type { IOnboardingApi } from '@/lib/api/interfaces/IOnboardingApi'
+import type { AssessmentResponse, AssessmentResultResponse, IOnboardingApi, LanguagePreferencesResponse } from '@/lib/api/interfaces/IOnboardingApi'
 import { MockOnboardingApi } from '@/lib/api/MockOnboardingApi'
 import { OnboardingApi } from '@/lib/api/OnboardingApi'
+import type { AssessmentQuestion } from '@/store/slices/onboardingSlice'
 
 
 class OnboardingService {
@@ -14,12 +15,15 @@ class OnboardingService {
       : OnboardingApi.getInstance())
   }
 
-  async submitLanguages(
-    nativeLanguage: LanguageCode,
-    targetLanguage: LanguageCode
-  ) {
+  async submitLanguagePreferences(preferences: { 
+    nativeLanguage: LanguageCode
+    targetLanguage: LanguageCode 
+  }): Promise<LanguagePreferencesResponse> {
     try {
-      const response = await this.api.submitLanguages(nativeLanguage, targetLanguage)
+      const response = await this.api.submitLanguages(
+        preferences.nativeLanguage, 
+        preferences.targetLanguage
+      )
       return response.data
     } catch (error) {
       throw new Error('Failed to submit language preferences')
@@ -34,7 +38,7 @@ class OnboardingService {
     }
   }
 
-  async startAssessment() {
+  async startAssessment(): Promise<AssessmentResponse> {
     try {
       const response = await this.api.startAssessment()
       return response.data
@@ -49,6 +53,15 @@ class OnboardingService {
       return response.data
     } catch (error) {
       throw new Error('Failed to submit assessment')
+    }
+  }
+
+  async getAssessmentResults(assessmentId: string): Promise<AssessmentResultResponse> {
+    try {
+      const response = await this.api.getAssessmentResults(assessmentId)
+      return response
+    } catch (error) {
+      throw new Error('Failed to get assessment results')
     }
   }
 }

@@ -64,6 +64,7 @@ export const initializeAuth = createAsyncThunk(
   async (_, { rejectWithValue, dispatch }) => {
     try {
       const user = await authService.getCurrentUser()
+      console.log('user', user)
       if (!user) {
         return rejectWithValue('No authenticated user')
       }

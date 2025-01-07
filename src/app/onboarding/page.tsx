@@ -63,6 +63,7 @@ export default function OnboardingPage() {
       router.push('/onboarding/assessment/intro')
     } catch (err) {
       setError('Failed to save language preferences')
+      console.error(err)
     }
   }
 

@@ -57,5 +57,7 @@ export interface IOnboardingApi {
   getComprehensionPrompt(): Promise<{ data: ComprehensionPromptResponse }>
   submitComprehensionAssessment(data: any): Promise<{ data: ComprehensionResponse }>
   
-  getAssessmentResults(assessmentId: string): Promise<{ data: FinalAssessmentResponse }>
+  
+  
+  submitFinalAssessment(assessmentId: string): Promise<{ data: FinalAssessmentResponse }>
 } 

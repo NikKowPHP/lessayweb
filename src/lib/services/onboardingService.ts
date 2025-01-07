@@ -1,6 +1,6 @@
 import type { LanguageCode } from '@/constants/languages'
 import type { AssessmentResponse, AssessmentResultResponse, IOnboardingApi, LanguagePreferencesResponse } from '@/lib/api/interfaces/IOnboardingApi'
-import { MockOnboardingApi } from '@/lib/api/MockOnboardingApi'
+import { MockOnboardingApi } from '@/lib/api/mock/MockOnboardingApi'
 import { OnboardingApi } from '@/lib/api/OnboardingApi'
 import type { AssessmentQuestion } from '@/store/slices/onboardingSlice'
 

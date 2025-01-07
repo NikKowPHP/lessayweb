@@ -26,7 +26,6 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     GET_LANGUAGES: '/onboarding/languages',
     START_ASSESSMENT: '/onboarding/assessment/start',
     SUBMIT_ASSESSMENT: '/onboarding/assessment/submit',
-    GET_ASSESSMENT_RESULTS: '/onboarding/assessment/results',
     PRONUNCIATION_PROMPT: '/onboarding/assessment/pronunciation/prompt',
     PRONUNCIATION_SUBMIT: '/onboarding/assessment/pronunciation/submit',
     VOCABULARY_PROMPT: '/onboarding/assessment/vocabulary/prompt',
@@ -35,7 +34,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     GRAMMAR_SUBMIT: '/onboarding/assessment/grammar/submit',
     COMPREHENSION_PROMPT: '/onboarding/assessment/comprehension/prompt',
     COMPREHENSION_SUBMIT: '/onboarding/assessment/comprehension/submit',
-    
+    SUBMIT_FINAL_ASSESSMENT: '/onboarding/assessment/final/submit',
   } as const
 
   private constructor() {
@@ -157,9 +156,12 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return { data: response }
   }
 
-  async getAssessmentResults(assessmentId: string): Promise<{ data: FinalAssessmentResponse }> {
-    const response = await this.get<FinalAssessmentResponse>(
-      `${OnboardingApi.ENDPOINTS.GET_ASSESSMENT_RESULTS}/${assessmentId}`
+ 
+
+  async submitFinalAssessment(assessmentId: string): Promise<{ data: FinalAssessmentResponse }> {
+    const response = await this.post<FinalAssessmentResponse>(
+      OnboardingApi.ENDPOINTS.SUBMIT_FINAL_ASSESSMENT,
+      { assessmentId }
     )
     return { data: response }
   }

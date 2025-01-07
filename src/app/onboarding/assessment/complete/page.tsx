@@ -1,42 +1,20 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
-import { completeUserOnboarding } from '@/store/slices/userSlice'
-import { resetOnboarding } from '@/store/slices/onboardingSlice'
+import { completeAssessment, resetOnboarding } from '@/store/slices/onboardingSlice'
 import LoadingSpinner from '@/components/ui/LoadingSpinner'
-import ConfettiExplosion from 'react-confetti-explosion'
-
-interface AssessmentResult {
-  pronunciation: number
-  vocabulary: number
-  grammar: number
-  comprehension: number
-  overall: number
-  level: 'beginner' | 'intermediate' | 'advanced'
-  nextSteps: string[]
-}
 
 export default function AssessmentCompletePage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const { loading, error } = useAppSelector((state) => state.onboarding)
-  const [isExploding, setIsExploding] = useState(true)
-  const [results, setResults] = useState<AssessmentResult | null>(null)
+  const { loading, error, assessmentResult: results } = useAppSelector(
+    (state) => state.onboarding
+  )
 
   useEffect(() => {
-    const fetchResults = async () => {
-      try {
-        const response = await onboardingService.getAssessmentResults()
-        setResults(response.data)
-        await dispatch(completeUserOnboarding()).unwrap()
-      } catch (error) {
-        console.error('Failed to fetch assessment results:', error)
-      }
-    }
-
-    fetchResults()
+    dispatch(completeAssessment())
   }, [dispatch])
 
   const handleContinue = () => {
@@ -55,16 +33,7 @@ export default function AssessmentCompletePage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-3xl mx-auto">
-        {isExploding && (
-          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <ConfettiExplosion
-              force={0.8}
-              duration={3000}
-              particleCount={100}
-              width={1600}
-            />
-          </div>
-        )}
+        
 
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">

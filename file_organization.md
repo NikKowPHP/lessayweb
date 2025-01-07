@@ -47,15 +47,12 @@ src/
 │       ├── Alert.tsx
 │       ├── Button.tsx
 │       ├── Input.tsx
+│       ├── LoadingSpinner.tsx
 │       ├── Loading.tsx
 │       ├── Modal.tsx
 │       └── Select.tsx
 ├── config
 │   └── navigation.ts
-├── constants
-│   ├── api.ts
-│   ├── languages.ts
-│   └── routes.ts
 ├── context
 │   ├── AuthContext.ts
 │   ├── LearningContext.ts
@@ -84,6 +81,11 @@ src/
 │   │   ├── MockOnboardingApi.ts
 │   │   ├── OnboardingApi.ts
 │   │   └── UserApi.ts
+│   ├── constants
+│   │   ├── api.ts
+│   │   ├── languages.ts
+│   │   └── routes.ts
+│   ├── middleware
 │   ├── models
 │   │   ├── assessments
 │   │   │   ├── AssessmentBase.ts
@@ -111,6 +113,12 @@ src/
 │   │       ├── LearningResponses.ts
 │   │       ├── OnboardingResponses.ts
 │   │       └── UserResponses.ts
+│   ├── schemas
+│   ├── services
+│   │   ├── authService.ts
+│   │   ├── learningService.ts
+│   │   ├── onboardingService.ts
+│   │   └── userService.ts
 │   ├── types
 │   │   ├── assessment.ts
 │   │   ├── auth.ts
@@ -118,16 +126,18 @@ src/
 │   │   ├── learning.ts
 │   │   └── user.ts
 │   └── utils
-│       └── cn.ts
+│       ├── api.ts
+│       ├── cn.ts
+│       ├── formatting.ts
+│       ├── storage.ts
+│       └── validation.ts
 ├── pages
 │   └── _app.tsx
 ├── providers
 │   └── ErrorProvider.tsx
 ├── services
 │   ├── authService.ts
-│   ├── learningService.ts
-│   ├── onboardingService.ts
-│   └── userService.ts
+│   └── onboardingService.ts
 ├── store
 │   ├── hooks.ts
 │   ├── index.ts
@@ -137,12 +147,5 @@ src/
 │       ├── learningSlice.ts
 │       ├── onboardingSlice.ts
 │       └── userSlice.ts
-├── styles
-│   └── globals.css
-├── types
-│   └── auth.ts
-└── utils
-    ├── api.ts
-    ├── formatting.ts
-    ├── storage.ts
-    └── validation.ts
+└── styles
+    └── globals.css

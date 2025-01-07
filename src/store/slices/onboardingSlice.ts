@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { onboardingService } from '@/services/onboardingService'
 import type { LanguageCode } from '@/constants/languages'
+import { completeUserOnboarding } from './userSlice'
 
 export type AssessmentType = 'pronunciation' | 'vocabulary' | 'grammar' | 'comprehension'
 
@@ -114,6 +115,32 @@ export const getAssessmentResults = createAsyncThunk(
   }
 )
 
+export const completeAssessment = createAsyncThunk(
+  'onboarding/completeAssessment',
+  async (_, { dispatch, rejectWithValue, getState }) => {
+    try {
+      const state = getState() as { onboarding: OnboardingState }
+      if (!state.onboarding.assessmentId) {
+        throw new Error('No assessment ID found')
+      }
+
+      // Get assessment results
+      const results = await onboardingService.getAssessmentResults(
+        state.onboarding.assessmentId
+      )
+
+      // Complete user onboarding
+      await dispatch(completeUserOnboarding()).unwrap()
+
+      return results
+    } catch (error) {
+      return rejectWithValue(
+        error instanceof Error ? error.message : 'Failed to complete assessment'
+      )
+    }
+  }
+)
+
 const onboardingSlice = createSlice({
   name: 'onboarding',
   initialState,
@@ -187,6 +214,21 @@ const onboardingSlice = createSlice({
         state.assessmentResult = action.payload
       })
       .addCase(getAssessmentResults.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
+      // Complete Assessment
+      .addCase(completeAssessment.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(completeAssessment.fulfilled, (state, action) => {
+        state.loading = false
+        state.assessmentResult = action.payload
+        state.currentStep = 'complete'
+      })
+      .addCase(completeAssessment.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })

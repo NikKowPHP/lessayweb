@@ -1,14 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import type { AssessmentQuestion } from '@/store/slices/onboardingSlice'
+import type { GrammarQuestion } from '@/lib/types/assessment'
 
 interface Props {
-  question: AssessmentQuestion & {
-    options: string[]
-    sentence?: string
-    blanks?: number[]
-  }
+  question: GrammarQuestion
   onSubmit: (answer: { selectedOptions: string[] }) => void
 }
 

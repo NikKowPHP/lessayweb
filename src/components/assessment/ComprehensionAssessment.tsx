@@ -2,13 +2,10 @@
 
 import { useState } from 'react'
 import YouTube from 'react-youtube'
-import type { AssessmentQuestion } from '@/store/slices/onboardingSlice'
+import type { ComprehensionQuestion } from '@/lib/types/assessment'
 
 interface Props {
-  question: AssessmentQuestion & {
-    videoId?: string
-    options: string[]
-  }
+  question: ComprehensionQuestion
   onSubmit: (answer: { selectedOption: string }) => void
 }
 

@@ -1,24 +1,20 @@
-export interface BaseModel {
-  id: string
-  createdAt?: Date
-  updatedAt?: Date
-}
+import { BaseModel, QuestionType, ProficiencyLevel } from './base'
 
 export interface BaseQuestion extends BaseModel {
   content: string
-  type: 'pronunciation' | 'vocabulary' | 'grammar' | 'comprehension'
+  type: QuestionType
 }
 export interface PronunciationQuestion extends BaseQuestion {
   id: string
   content: string
-  type: 'pronunciation'
+  type: QuestionType.Pronunciation
   audioUrl?: string
 }
 
 export interface VocabularyQuestion extends BaseQuestion {
   id: string
   content: string
-  type: 'vocabulary'
+  type: QuestionType.Vocabulary
   imageUrl: string
   options?: string[]
 }
@@ -26,7 +22,7 @@ export interface VocabularyQuestion extends BaseQuestion {
 export interface GrammarQuestion extends BaseQuestion {
   id: string
   content: string
-  type: 'grammar'
+  type: QuestionType.Grammar
   options: string[]
   sentence?: string
   blanks?: number[]
@@ -35,7 +31,7 @@ export interface GrammarQuestion extends BaseQuestion {
 export interface ComprehensionQuestion extends BaseQuestion {
   id: string
   content: string
-  type: 'comprehension'
+  type: QuestionType.Comprehension
   videoId?: string
   options: string[]
 }
@@ -45,3 +41,13 @@ export type AssessmentQuestion =
   | VocabularyQuestion
   | GrammarQuestion
   | ComprehensionQuestion
+
+export interface AssessmentResult {
+  pronunciation: number
+  vocabulary: number
+  grammar: number
+  comprehension: number
+  overall: number
+  level: ProficiencyLevel
+  nextSteps: string[]
+}

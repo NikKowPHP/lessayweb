@@ -28,14 +28,18 @@ class OnboardingService {
   }
 
   async initializePromptQueue(firstType: AssessmentType) {
-    const priorityPrompt = await this.fetchPrompt(firstType)
+    // First, start fetching the first prompt immediately
+    const priorityPromptPromise = this.fetchPrompt(firstType)
     
+    // Start fetching remaining prompts in parallel
     const remainingTypes = AssessmentOrder.filter(type => type !== firstType)
-    
     remainingTypes.forEach(type => {
-      this.promptQueue.set(type, this.fetchPrompt(type))
+      const promise = this.fetchPrompt(type)
+      this.promptQueue.set(type, promise)
     })
-  
+
+    // Wait only for the first prompt to return
+    const priorityPrompt = await priorityPromptPromise
     return priorityPrompt
   }
   
@@ -60,11 +64,20 @@ class OnboardingService {
  
 
   async getPrompt(type: AssessmentType) {
-    const queuedPrompt = this.promptQueue.get(type)
-    if (queuedPrompt) {
-      return await queuedPrompt
+    try {
+      // Check if prompt is already in queue
+      const queuedPrompt = this.promptQueue.get(type)
+      if (queuedPrompt) {
+        const prompt = await queuedPrompt
+        // Remove from queue after retrieving
+        this.promptQueue.delete(type)
+        return prompt
+      }
+      // If not in queue, fetch directly
+      return await this.fetchPrompt(type)
+    } catch (error) {
+      throw new Error(`Failed to get ${type} prompt`)
     }
-    return await this.fetchPrompt(type)
   }
 
   private async updatePromptLoadStatus(type: AssessmentType, loaded: boolean) {
@@ -98,8 +111,10 @@ class OnboardingService {
       
       storageService.setOnboardingSession(initialSession)
       
+      // Get first prompt while initiating other fetches
       const firstPrompt = await this.initializePromptQueue(firstType)
       
+      // Update session with first prompt
       storageService.updateOnboardingSession({
         prompts: {
           [firstType]: firstPrompt

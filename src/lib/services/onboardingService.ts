@@ -2,7 +2,6 @@ import type { LanguageCode } from '@/constants/languages'
 import type { IOnboardingApi } from '@/lib/api/interfaces/IOnboardingApi'
 import { MockOnboardingApi } from '@/lib/api/mock/MockOnboardingApi'
 import { OnboardingApi } from '@/lib/api/OnboardingApi'
-import  { AssessmentOrder, AssessmentPrompts, AssessmentResponses, AssessmentType, OnboardingStep } from '@/store/slices/onboardingSlice'
 
 import type {
   PronunciationPromptResponse,
@@ -10,17 +9,12 @@ import type {
   GrammarPromptResponse,
   ComprehensionPromptResponse
 } from '@/lib/models/responses/prompts/PromptResponseIndex'
-import {  LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
+import {  LanguagePreferenceRequest, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
+import { storageService } from './storageService'
+import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '../models/requests/assessments/AssessmentRequests'
+import { AssessmentOrder, OnboardingSession, OnboardingStep } from '../types/onboardingTypes'
+import { AssessmentType } from '../types/onboardingTypes'
 
-interface OnboardingSession {
-  assessmentId: string | null
-  currentStep: OnboardingStep
-  assessmentType: AssessmentType | null
-  assessmentProgress: number
-  prompts: AssessmentPrompts
-  responses: AssessmentResponses
-  promptLoadStatus: Record<AssessmentType, boolean>
-}
 
 class OnboardingService {
   private api: IOnboardingApi
@@ -74,9 +68,9 @@ class OnboardingService {
   }
 
   private async updatePromptLoadStatus(type: AssessmentType, loaded: boolean) {
-    const session = await this.getStoredOnboardingSession()
+    const session = storageService.getOnboardingSession()
     if (session) {
-      await this.updateOnboardingSession({
+      storageService.updateOnboardingSession({
         promptLoadStatus: {
           ...session.promptLoadStatus,
           [type]: loaded
@@ -87,7 +81,6 @@ class OnboardingService {
 
   async startAssessment(firstType: AssessmentType) {
     try {
-      // Initialize session with empty prompts and load status
       const initialSession: OnboardingSession = {
         assessmentId: null,
         currentStep: OnboardingStep.AssessmentIntro,
@@ -103,13 +96,11 @@ class OnboardingService {
         }
       }
       
-      await this.storeOnboardingSession(initialSession)
+      storageService.setOnboardingSession(initialSession)
       
-      // Start loading prompts with priority
       const firstPrompt = await this.initializePromptQueue(firstType)
       
-      // Update session with first prompt
-      await this.updateOnboardingSession({
+      storageService.updateOnboardingSession({
         prompts: {
           [firstType]: firstPrompt
         }
@@ -126,10 +117,11 @@ class OnboardingService {
     targetLanguage: LanguageCode 
   }): Promise<LanguagePreferencesResponse> {
     try {
-      const response = await this.api.submitLanguages(
-        preferences.nativeLanguage, 
-        preferences.targetLanguage
-      )
+      const request: LanguagePreferenceRequest = {
+        nativeLanguage: preferences.nativeLanguage,
+        targetLanguage: preferences.targetLanguage
+      }
+      const response = await this.api.submitLanguages(request)
       return response.data
     } catch (error) {
       throw new Error('Failed to submit language preferences')
@@ -144,9 +136,9 @@ class OnboardingService {
     }
   }
 
-  async submitAssessment(assessmentData: any) {
+  async submitFinalAssessment(assessmentId: string) {
     try {
-      const response = await this.api.submitFinalAssessment(assessmentData)
+      const response = await this.api.submitFinalAssessment(assessmentId)
       return response.data
     } catch (error) {
       throw new Error('Failed to submit assessment')
@@ -163,7 +155,7 @@ class OnboardingService {
     }
   }
 
-  async submitPronunciationAssessment(data: any) {
+  async submitPronunciationAssessment(data: PronunciationAssessmentRequest) {
     try {
       const response = await this.api.submitPronunciationAssessment(data)
       return response.data
@@ -182,7 +174,7 @@ class OnboardingService {
     }
   }
 
-  async submitVocabularyAssessment(data: any) {
+  async submitVocabularyAssessment(data: VocabularyAssessmentRequest) {
     try {
       const response = await this.api.submitVocabularyAssessment(data)
       return response.data
@@ -201,7 +193,7 @@ class OnboardingService {
     }
   }
 
-  async submitGrammarAssessment(data: any) {
+  async submitGrammarAssessment(data: GrammarAssessmentRequest) {
     try {
       const response = await this.api.submitGrammarAssessment(data)
       return response.data
@@ -220,34 +212,13 @@ class OnboardingService {
     }
   }
 
-  async submitComprehensionAssessment(data: any) {
+  async submitComprehensionAssessment(data: ComprehensionAssessmentRequest) {
     try {
       const response = await this.api.submitComprehensionAssessment(data)
       return response.data
     } catch (error) {
       throw new Error('Failed to submit comprehension assessment')
     }
-  }
-
-  async getStoredOnboardingSession(): Promise<OnboardingSession | null> {
-    try {
-      const session = sessionStorage.getItem('onboarding_session')
-      return session ? JSON.parse(session) : null
-    } catch {
-      return null
-    }
-  }
-
-  async storeOnboardingSession(session: OnboardingSession): Promise<void> {
-    sessionStorage.setItem('onboarding_session', JSON.stringify(session))
-  }
-
-  async updateOnboardingSession(updates: Partial<OnboardingSession>): Promise<void> {
-    const currentSession = await this.getStoredOnboardingSession()
-    await this.storeOnboardingSession({
-      ...currentSession,
-      ...updates
-    } as OnboardingSession)
   }
 }
 

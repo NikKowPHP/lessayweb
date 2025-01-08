@@ -1,11 +1,16 @@
 import type { LanguageCode } from '@/constants/languages'
-
 import type {
   PronunciationPromptResponse,
   VocabularyPromptResponse,
   GrammarPromptResponse,
   ComprehensionPromptResponse
 } from '@/models/responses/prompts/PromptResponseIndex'
+import type {
+  PronunciationAssessmentRequest,
+  VocabularyAssessmentRequest,
+  GrammarAssessmentRequest,
+  ComprehensionAssessmentRequest
+} from '@/models/requests/assessments/AssessmentRequestIndex'
 import type {
   PronunciationResponse,
   VocabularyResponse,
@@ -19,45 +24,40 @@ export interface LanguagePreferences {
   targetLanguage: LanguageCode
 }
 
-export interface AssessmentQuestion {
-  id: string
-  type: string
-  content: string
-  options?: string[]
-}
-
 export interface IOnboardingApi {
+  // Language preferences
   submitLanguages(
     nativeLanguage: LanguageCode,
     targetLanguage: LanguageCode
   ): Promise<{ data: LanguagePreferences }>
-  
   getStoredLanguages(): Promise<LanguagePreferences | null>
-  
-  startAssessment(): Promise<{
-    data: {
-      assessmentId: string
-      questions: AssessmentQuestion[]
-    }
-  }>
-  
- 
-  
 
-  
+  // Pronunciation assessment
   getPronunciationPrompt(): Promise<{ data: PronunciationPromptResponse }>
-  submitPronunciationAssessment(data: any): Promise<{ data: PronunciationResponse }>
-  
+  submitPronunciationAssessment(
+    data: PronunciationAssessmentRequest
+  ): Promise<{ data: PronunciationResponse }>
+
+  // Vocabulary assessment
   getVocabularyPrompt(): Promise<{ data: VocabularyPromptResponse }>
-  submitVocabularyAssessment(data: any): Promise<{ data: VocabularyResponse }>
-  
+  submitVocabularyAssessment(
+    data: VocabularyAssessmentRequest
+  ): Promise<{ data: VocabularyResponse }>
+
+  // Grammar assessment
   getGrammarPrompt(): Promise<{ data: GrammarPromptResponse }>
-  submitGrammarAssessment(data: any): Promise<{ data: GrammarResponse }>
-  
+  submitGrammarAssessment(
+    data: GrammarAssessmentRequest
+  ): Promise<{ data: GrammarResponse }>
+
+  // Comprehension assessment
   getComprehensionPrompt(): Promise<{ data: ComprehensionPromptResponse }>
-  submitComprehensionAssessment(data: any): Promise<{ data: ComprehensionResponse }>
-  
-  
-  
-  submitFinalAssessment(assessmentId: string): Promise<{ data: FinalAssessmentResponse }>
+  submitComprehensionAssessment(
+    data: ComprehensionAssessmentRequest
+  ): Promise<{ data: ComprehensionResponse }>
+
+  // Final assessment
+  submitFinalAssessment(
+    assessmentId: string
+  ): Promise<{ data: FinalAssessmentResponse }>
 } 

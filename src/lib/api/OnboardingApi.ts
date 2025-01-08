@@ -18,6 +18,7 @@ import type {
   ComprehensionResponse,
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
+import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/models/requests/assessments/AssessmentRequestIndex'
 
 export class OnboardingApi extends Api implements IOnboardingApi {
   private static instance: OnboardingApi
@@ -80,19 +81,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     }
   }
 
-  async startAssessment() {
-    const response = await this.post<{
-      assessmentId: string
-      questions: AssessmentQuestion[]
-    }>(OnboardingApi.ENDPOINTS.START_ASSESSMENT)
-
-    return {
-      data: {
-        assessmentId: response.assessmentId,
-        questions: response.questions,
-      },
-    }
-  }
+  
 
  
 
@@ -103,7 +92,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return { data: response }
   }
 
-  async submitPronunciationAssessment(data: any): Promise<{ data: PronunciationResponse }> {
+  async submitPronunciationAssessment(data: PronunciationAssessmentRequest): Promise<{ data: PronunciationResponse }> {
     const response = await this.post<PronunciationResponse>(
       OnboardingApi.ENDPOINTS.PRONUNCIATION_SUBMIT,
       data
@@ -118,7 +107,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return { data: response }
   }
 
-  async submitVocabularyAssessment(data: any): Promise<{ data: VocabularyResponse }> {
+  async submitVocabularyAssessment(data: VocabularyAssessmentRequest): Promise<{ data: VocabularyResponse }> {
     const response = await this.post<VocabularyResponse>(
       OnboardingApi.ENDPOINTS.VOCABULARY_SUBMIT,
       data
@@ -133,7 +122,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return { data: response }
   }
 
-  async submitGrammarAssessment(data: any): Promise<{ data: GrammarResponse }> {
+  async submitGrammarAssessment(data: GrammarAssessmentRequest): Promise<{ data: GrammarResponse }> {
     const response = await this.post<GrammarResponse>(
       OnboardingApi.ENDPOINTS.GRAMMAR_SUBMIT,
       data
@@ -148,7 +137,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return { data: response }
   }
 
-  async submitComprehensionAssessment(data: any): Promise<{ data: ComprehensionResponse }> {
+  async submitComprehensionAssessment(data: ComprehensionAssessmentRequest): Promise<{ data: ComprehensionResponse }> {
     const response = await this.post<ComprehensionResponse>(
       OnboardingApi.ENDPOINTS.COMPREHENSION_SUBMIT,
       data

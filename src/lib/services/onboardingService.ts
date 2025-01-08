@@ -3,6 +3,18 @@ import type { AssessmentResponse, AssessmentResultResponse, IOnboardingApi, Lang
 import { MockOnboardingApi } from '@/lib/api/mock/MockOnboardingApi'
 import { OnboardingApi } from '@/lib/api/OnboardingApi'
 import type { AssessmentQuestion } from '@/store/slices/onboardingSlice'
+import type {
+  PronunciationPromptRequest,
+  VocabularyPromptRequest,
+  GrammarPromptRequest,
+  ComprehensionPromptRequest
+} from '@/lib/models/requests/prompts/PromptRequestIndex'
+import type {
+  PronunciationPromptResponse,
+  VocabularyPromptResponse,
+  GrammarPromptResponse,
+  ComprehensionPromptResponse
+} from '@/lib/models/responses/prompts/PromptResponseIndex'
 
 
 class OnboardingService {
@@ -49,19 +61,86 @@ class OnboardingService {
 
   async submitAssessment(assessmentData: any) {
     try {
-      const response = await this.api.submitAssessment(assessmentData)
+      const response = await this.api.submitFinalAssessment(assessmentData)
       return response.data
     } catch (error) {
       throw new Error('Failed to submit assessment')
     }
   }
 
-  async getAssessmentResults(assessmentId: string): Promise<AssessmentResultResponse> {
+  // Pronunciation methods
+  async getPronunciationPrompt(request?: PronunciationPromptRequest): Promise<PronunciationPromptResponse> {
     try {
-      const response = await this.api.getAssessmentResults(assessmentId)
-      return response
+      const response = await this.api.getPronunciationPrompt()
+      return response.data
     } catch (error) {
-      throw new Error('Failed to get assessment results')
+      throw new Error('Failed to get pronunciation prompt')
+    }
+  }
+
+  async submitPronunciationAssessment(data: any) {
+    try {
+      const response = await this.api.submitPronunciationAssessment(data)
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to submit pronunciation assessment')
+    }
+  }
+
+  // Vocabulary methods
+  async getVocabularyPrompt(request?: VocabularyPromptRequest): Promise<VocabularyPromptResponse> {
+    try {
+      const response = await this.api.getVocabularyPrompt()
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to get vocabulary prompt')
+    }
+  }
+
+  async submitVocabularyAssessment(data: any) {
+    try {
+      const response = await this.api.submitVocabularyAssessment(data)
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to submit vocabulary assessment')
+    }
+  }
+
+  // Grammar methods
+  async getGrammarPrompt(request?: GrammarPromptRequest): Promise<GrammarPromptResponse> {
+    try {
+      const response = await this.api.getGrammarPrompt()
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to get grammar prompt')
+    }
+  }
+
+  async submitGrammarAssessment(data: any) {
+    try {
+      const response = await this.api.submitGrammarAssessment(data)
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to submit grammar assessment')
+    }
+  }
+
+  // Comprehension methods
+  async getComprehensionPrompt(request?: ComprehensionPromptRequest): Promise<ComprehensionPromptResponse> {
+    try {
+      const response = await this.api.getComprehensionPrompt()
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to get comprehension prompt')
+    }
+  }
+
+  async submitComprehensionAssessment(data: any) {
+    try {
+      const response = await this.api.submitComprehensionAssessment(data)
+      return response.data
+    } catch (error) {
+      throw new Error('Failed to submit comprehension assessment')
     }
   }
 }

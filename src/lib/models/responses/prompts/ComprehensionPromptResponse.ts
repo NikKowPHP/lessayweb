@@ -12,7 +12,7 @@ export interface ComprehensionQuestion {
   hint: string
 }
 
-export interface ComprehensionPromptResponse {
+export interface ComprehensionPromptData {
   youtube_video_id: string
   title: string
   description: string
@@ -21,4 +21,9 @@ export interface ComprehensionPromptResponse {
   difficulty: string
   questions: ComprehensionQuestion[]
   transcript_highlights?: Record<string, string>
+}
+
+export interface ComprehensionPromptResponse {
+  status: string
+  data: ComprehensionPromptData
 }

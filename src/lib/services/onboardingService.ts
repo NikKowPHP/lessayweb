@@ -16,6 +16,13 @@ import type {
   ComprehensionPromptResponse
 } from '@/lib/models/responses/prompts/PromptResponseIndex'
 
+interface OnboardingSession {
+  assessmentId: string
+  currentStep: OnboardingState['currentStep']
+  questions: AssessmentQuestion[]
+  currentQuestion: AssessmentQuestion | null
+  assessmentProgress: number
+}
 
 class OnboardingService {
   private api: IOnboardingApi
@@ -142,6 +149,27 @@ class OnboardingService {
     } catch (error) {
       throw new Error('Failed to submit comprehension assessment')
     }
+  }
+
+  async getStoredOnboardingSession(): Promise<OnboardingSession | null> {
+    try {
+      const session = sessionStorage.getItem('onboarding_session')
+      return session ? JSON.parse(session) : null
+    } catch {
+      return null
+    }
+  }
+
+  async storeOnboardingSession(session: OnboardingSession): Promise<void> {
+    sessionStorage.setItem('onboarding_session', JSON.stringify(session))
+  }
+
+  async updateOnboardingSession(updates: Partial<OnboardingSession>): Promise<void> {
+    const currentSession = await this.getStoredOnboardingSession()
+    await this.storeOnboardingSession({
+      ...currentSession,
+      ...updates
+    } as OnboardingSession)
   }
 }
 

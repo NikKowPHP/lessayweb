@@ -1,4 +1,17 @@
-export type { PronunciationPromptResponse } from './PronunciationPromptResponse'
-export type { VocabularyPromptResponse } from './VocabularyPromptResponse'
-export type { GrammarPromptResponse } from './GrammarPromptResponse'
-export type { ComprehensionPromptResponse, ComprehensionQuestion } from './ComprehensionPromptResponse'
+export type { 
+  PronunciationPromptResponse, 
+  PronunciationPromptData 
+} from './PronunciationPromptResponse'
+export type { 
+  VocabularyPromptResponse, 
+  VocabularyPromptData 
+} from './VocabularyPromptResponse'
+export type { 
+  GrammarPromptResponse, 
+  GrammarPromptData 
+} from './GrammarPromptResponse'
+export type { 
+  ComprehensionPromptResponse, 
+  ComprehensionPromptData,
+  ComprehensionQuestion 
+} from './ComprehensionPromptResponse'

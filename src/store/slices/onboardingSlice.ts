@@ -1,75 +1,157 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { onboardingService } from '@/services/onboardingService'
 import type { LanguageCode } from '@/constants/languages'
-import { completeUserOnboarding } from './userSlice'
+import type { 
+  PronunciationPromptData,
+  VocabularyPromptData,
+  GrammarPromptData,
+  ComprehensionPromptData 
+} from '@/models/responses/prompts/PromptResponseIndex'
+import type {
+  PronunciationResponse,
+  VocabularyResponse,
+  GrammarResponse,
+  ComprehensionResponse
+} from '@/models/responses/assessments/AssessmentResponseIndex'
+import type { FinalAssessmentResponse } from '@/models/responses/assessments/FinalAssessmentResponse'
 
 export type AssessmentType = 'pronunciation' | 'vocabulary' | 'grammar' | 'comprehension'
 
-export interface AssessmentQuestion {
-  id: string
-  type: AssessmentType
-  content: string
-  options?: string[]
-  audioUrl?: string
-  imageUrl?: string
-  videoId?: string
-  sentence?: string
-  blanks?: number[]
+interface AssessmentPrompts {
+  pronunciation?: PronunciationPromptData
+  vocabulary?: VocabularyPromptData
+  grammar?: GrammarPromptData
+  comprehension?: ComprehensionPromptData
 }
 
-export interface AssessmentResult {
-  pronunciation: number
-  vocabulary: number
-  grammar: number
-  comprehension: number
-  overall: number
-  level: 'beginner' | 'intermediate' | 'advanced'
-  nextSteps: string[]
+interface AssessmentResponses {
+  pronunciation?: PronunciationResponse
+  vocabulary?: VocabularyResponse
+  grammar?: GrammarResponse
+  comprehension?: ComprehensionResponse
 }
 
 interface OnboardingState {
   currentStep: 'language' | 'assessment-intro' | 'assessment' | 'complete'
   assessmentType: AssessmentType | null
-  currentQuestion: AssessmentQuestion | null
-  questions: AssessmentQuestion[]
   loading: boolean
   error: string | null
   assessmentProgress: number
   assessmentId: string | null
-  assessmentResult: AssessmentResult | null
+  prompts: AssessmentPrompts
+  responses: AssessmentResponses
+  promptsLoaded: boolean
+  sessionLoaded: boolean
+  finalAssessment: FinalAssessmentResponse | null
 }
 
 const initialState: OnboardingState = {
   currentStep: 'language',
   assessmentType: null,
-  currentQuestion: null,
-  questions: [],
   loading: false,
   error: null,
   assessmentProgress: 0,
   assessmentId: null,
-  assessmentResult: null
+  prompts: {},
+  responses: {},
+  promptsLoaded: false,
+  sessionLoaded: false,
+  finalAssessment: null
 }
+
+export interface OnboardingSession {
+  assessmentId: string | null
+  currentStep: OnboardingState['currentStep']
+  assessmentType: AssessmentType | null
+  assessmentProgress: number
+  prompts: AssessmentPrompts
+  responses: AssessmentResponses
+}
+
+// New thunk to load session state
+export const loadOnboardingSession = createAsyncThunk(
+  'onboarding/loadSession',
+  async (_, { rejectWithValue }) => {
+    try {
+      const session = await onboardingService.getStoredOnboardingSession()
+      return session
+    } catch (error) {
+      return rejectWithValue('Failed to load session')
+    }
+  }
+)
+
+// New thunk to initialize all prompts
+export const initializeAssessmentPrompts = createAsyncThunk(
+  'onboarding/initializePrompts',
+  async (_, { rejectWithValue }) => {
+    try {
+      const [
+        pronunciationPrompt,
+        vocabularyPrompt,
+        grammarPrompt,
+        comprehensionPrompt
+      ] = await Promise.all([
+        onboardingService.getPronunciationPrompt(),
+        onboardingService.getVocabularyPrompt(),
+        onboardingService.getGrammarPrompt(),
+        onboardingService.getComprehensionPrompt()
+      ])
+
+      const prompts = {
+        pronunciation: pronunciationPrompt,
+        vocabulary: vocabularyPrompt,
+        grammar: grammarPrompt,
+        comprehension: comprehensionPrompt
+      }
+
+      // Store prompts in session
+      await onboardingService.storeOnboardingSession({
+        ...await onboardingService.getStoredOnboardingSession(),
+        prompts
+      })
+
+      return prompts
+    } catch (error) {
+      return rejectWithValue('Failed to initialize prompts')
+    }
+  }
+)
+
+// Modified startAssessment to handle prompt initialization
+export const startAssessment = createAsyncThunk(
+  'onboarding/startAssessment',
+  async (_, { dispatch, getState, rejectWithValue }) => {
+    try {
+      // First initialize all prompts if not already loaded
+      const state = getState() as RootState
+      if (!state.onboarding.promptsLoaded) {
+        await dispatch(initializeAssessmentPrompts()).unwrap()
+      }
+
+      const response = await onboardingService.startAssessment()
+      
+      // Store assessment state in session
+      await onboardingService.storeOnboardingSession({
+        assessmentId: response.assessment_id,
+        currentStep: 'assessment',
+        questions: response.questions,
+        currentQuestion: response.questions[0],
+        assessmentProgress: 0
+      })
+
+      return response
+    } catch (error) {
+      return rejectWithValue('Failed to start assessment')
+    }
+  }
+)
 
 export const submitLanguagePreferences = createAsyncThunk(
   'onboarding/submitLanguagePreferences',
   async (preferences: { nativeLanguage: LanguageCode; targetLanguage: LanguageCode }) => {
     const response = await onboardingService.submitLanguagePreferences(preferences)
     return response
-  }
-)
-
-export const startAssessment = createAsyncThunk(
-  'onboarding/startAssessment',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await onboardingService.startAssessment()
-      return response
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : 'Failed to start assessment'
-      )
-    }
   }
 )
 
@@ -95,52 +177,6 @@ export const submitAssessmentAnswer = createAsyncThunk(
   }
 )
 
-export const getAssessmentResults = createAsyncThunk(
-  'onboarding/getAssessmentResults',
-  async (_, { rejectWithValue, getState }) => {
-    try {
-      const state = getState() as { onboarding: OnboardingState }
-      if (!state.onboarding.assessmentId) {
-        throw new Error('No assessment ID found')
-      }
-      const response = await onboardingService.getAssessmentResults(
-        state.onboarding.assessmentId
-      )
-      return response
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : 'Failed to get assessment results'
-      )
-    }
-  }
-)
-
-export const completeAssessment = createAsyncThunk(
-  'onboarding/completeAssessment',
-  async (_, { dispatch, rejectWithValue, getState }) => {
-    try {
-      const state = getState() as { onboarding: OnboardingState }
-      if (!state.onboarding.assessmentId) {
-        throw new Error('No assessment ID found')
-      }
-
-      // Get assessment results
-      const results = await onboardingService.getAssessmentResults(
-        state.onboarding.assessmentId
-      )
-
-      // Complete user onboarding
-      await dispatch(completeUserOnboarding()).unwrap()
-
-      return results
-    } catch (error) {
-      return rejectWithValue(
-        error instanceof Error ? error.message : 'Failed to complete assessment'
-      )
-    }
-  }
-)
-
 const onboardingSlice = createSlice({
   name: 'onboarding',
   initialState,
@@ -155,12 +191,46 @@ const onboardingSlice = createSlice({
     setAssessmentType: (state, action: { payload: AssessmentType }) => {
       state.assessmentType = action.payload
     },
-    setCurrentQuestion: (state, action: { payload: AssessmentQuestion | null }) => {
-      state.currentQuestion = action.payload
-    },
   },
   extraReducers: (builder) => {
     builder
+      // Load Session
+      .addCase(loadOnboardingSession.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(loadOnboardingSession.fulfilled, (state, action) => {
+        state.loading = false
+        state.sessionLoaded = true
+        if (action.payload) {
+          state.assessmentId = action.payload.assessmentId
+          state.currentStep = action.payload.currentStep
+          state.questions = action.payload.questions
+          state.currentQuestion = action.payload.currentQuestion
+          state.assessmentProgress = action.payload.assessmentProgress
+        }
+      })
+      .addCase(loadOnboardingSession.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+        state.sessionLoaded = true
+      })
+
+      // Initialize Prompts
+      .addCase(initializeAssessmentPrompts.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(initializeAssessmentPrompts.fulfilled, (state, action) => {
+        state.loading = false
+        state.prompts = action.payload
+        state.promptsLoaded = true
+      })
+      .addCase(initializeAssessmentPrompts.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.payload as string
+      })
+
       // Start Assessment
       .addCase(startAssessment.pending, (state) => {
         state.loading = true
@@ -204,34 +274,8 @@ const onboardingSlice = createSlice({
         state.error = action.payload as string
       })
 
-      // Get Assessment Results
-      .addCase(getAssessmentResults.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(getAssessmentResults.fulfilled, (state, action) => {
-        state.loading = false
-        state.assessmentResult = action.payload
-      })
-      .addCase(getAssessmentResults.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
+    
 
-      // Complete Assessment
-      .addCase(completeAssessment.pending, (state) => {
-        state.loading = true
-        state.error = null
-      })
-      .addCase(completeAssessment.fulfilled, (state, action) => {
-        state.loading = false
-        state.assessmentResult = action.payload
-        state.currentStep = 'complete'
-      })
-      .addCase(completeAssessment.rejected, (state, action) => {
-        state.loading = false
-        state.error = action.payload as string
-      })
   },
 })
 

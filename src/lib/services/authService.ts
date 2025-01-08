@@ -1,25 +1,29 @@
 import { IAuthApi } from '@/lib/api/interfaces/IAuthApi'
-import { AuthResponse, AuthCredentials, SocialProvider } from '@/types/auth'
+import { AuthResponse, AuthCredentials, SocialProvider } from '@/lib/types/auth.types'
 import { AuthApi } from '@/lib/api/AuthApi'
 import { MockAuthApi } from '@/lib/api/MockAuthApi'
+import Cookies from 'js-cookie'
 
 class AuthService {
   private TOKEN_KEY = 'auth_token'
   private api: IAuthApi
 
   constructor(api?: IAuthApi) {
-    // Use mock API in development, real API in production
     this.api = api || (process.env.NODE_ENV === 'development' 
       ? new MockAuthApi()
       : AuthApi.getInstance())
   }
 
   private setToken(token: string) {
-    localStorage.setItem(this.TOKEN_KEY, token)
+    Cookies.set(this.TOKEN_KEY, token, { 
+      expires: 7, // 7 days
+      sameSite: 'strict',
+      secure: process.env.NODE_ENV === 'production'
+    })
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY)
+    return Cookies.get(this.TOKEN_KEY) || null
   }
 
   isAuthenticated(): boolean {
@@ -54,12 +58,9 @@ class AuthService {
 
   async logout(): Promise<void> {
     await this.api.logout()
-    localStorage.removeItem(this.TOKEN_KEY)
+    Cookies.remove(this.TOKEN_KEY)
   }
 }
 
-// Export a singleton instance with the appropriate API implementation
 export const authService = new AuthService()
-
-// Export the class for testing purposes
 export { AuthService } 

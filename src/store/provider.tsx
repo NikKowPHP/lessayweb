@@ -2,14 +2,14 @@
 
 import { Provider } from 'react-redux'
 import { store } from './index'
-import { FC, ReactNode } from 'react'
+import { OnboardingStateProvider } from './providers/OnboardingStateProvider'
 
-interface ReduxProviderProps {
-  children: ReactNode
+export default function ReduxProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <Provider store={store}>
+      <OnboardingStateProvider>
+        {children}
+      </OnboardingStateProvider>
+    </Provider>
+  )
 }
-
-const ReduxProvider: FC<ReduxProviderProps> = ({ children }) => {
-  return <Provider store={store}>{children}</Provider>
-}
-
-export default ReduxProvider

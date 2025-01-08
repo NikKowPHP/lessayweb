@@ -81,7 +81,7 @@ class OnboardingService {
   }
 
   private async updatePromptLoadStatus(type: AssessmentType, loaded: boolean) {
-    const session = storageService.getOnboardingSession()
+    const session = await storageService.getOnboardingSession()
     if (session) {
       storageService.updateOnboardingSession({
         promptLoadStatus: {

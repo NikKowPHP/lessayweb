@@ -30,6 +30,7 @@
       "@/*": ["./src/*"],
       "@/lib/*": ["./src/lib/*"],
       "@/services/*": ["./src/lib/services/*"],
+      "@/providers/*": ["./src/lib/providers/*"],
       "@/store/*": ["./src/store/*"],
       "@/types/*": ["./src/lib/types/*"],
       "@/components/*": ["./src/components/*"],

@@ -10,6 +10,7 @@ import {
 } from '@/lib/types/onboardingTypes'
 import type { LanguageCode } from '@/constants/languages'
 import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
+import { onboardingStorage } from '@/lib/services/onboardingStorage'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(
@@ -55,6 +56,14 @@ export const submitFinalAssessment = createAsyncThunk(
   'onboarding/submitFinalAssessment',
   async (assessmentId: string) => {
     return await onboardingService.submitFinalAssessment(assessmentId)
+  }
+)
+
+// New thunk for state rehydration
+export const rehydrateState = createAsyncThunk(
+  'onboarding/rehydrate',
+  async () => {
+    return await onboardingStorage.getSession()
   }
 )
 
@@ -125,6 +134,28 @@ const onboardingSlice = createSlice({
         state.finalAssessment = action.payload
         state.currentStep = OnboardingStep.Complete
       })
+      // Add rehydration case
+      .addCase(rehydrateState.fulfilled, (state, action) => {
+        if (action.payload) {
+          return {
+            ...state,
+            ...action.payload,
+            isRehydrated: true
+          }
+        }
+        return {
+          ...state,
+          isRehydrated: true
+        }
+      })
+      // Persist state on all successful actions
+      .addMatcher(
+        (action) => action.type.startsWith('onboarding/') && action.type.endsWith('/fulfilled'),
+        (state) => {
+          onboardingStorage.setSession(state)
+          return state
+        }
+      )
   }
 })
 

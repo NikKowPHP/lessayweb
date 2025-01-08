@@ -2,9 +2,8 @@ import localforage from 'localforage'
 import type { LanguageCode } from '@/constants/languages'
 import type {
   IOnboardingApi,
-  AssessmentQuestion,
-  LanguagePreferences,
 } from '../interfaces/IOnboardingApi'
+import { LanguagePreferenceRequest, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
 
 // Configure localforage instance for onboarding data
 const onboardingStorage = localforage.createInstance({
@@ -17,26 +16,7 @@ const STORAGE_KEYS = {
   ASSESSMENT: 'assessment_progress',
 } as const
 
-// Mock assessment questions
-const MOCK_QUESTIONS: AssessmentQuestion[] = [
-  {
-    id: '1',
-    type: 'pronunciation',
-    content: 'Please pronounce: "Hello"',
-  },
-  {
-    id: '2',
-    type: 'grammar',
-    content: 'Complete the sentence: "I ___ to the store yesterday."',
-    options: ['go', 'went', 'gone', 'going'],
-  },
-  {
-    id: '3',
-    type: 'vocabulary',
-    content: 'What is this object?',
-    options: ['apple', 'banana', 'orange', 'grape'],
-  },
-]
+
 
 interface MockRoute {
   path: string
@@ -468,23 +448,17 @@ export class MockOnboardingApi implements IOnboardingApi {
     return route.response
   }
 
-  async submitLanguages(nativeLanguage: LanguageCode, targetLanguage: LanguageCode) {
-    const response = await this.handleMockRequest('/languages', 'POST', {
-      nativeLanguage,
-      targetLanguage
-    })
+  async submitLanguages(data: LanguagePreferenceRequest) {
+    const response = await this.handleMockRequest('/languages', 'POST', data)
 
-    await onboardingStorage.setItem(STORAGE_KEYS.LANGUAGES, {
-      nativeLanguage,
-      targetLanguage
-    })
+    await onboardingStorage.setItem(STORAGE_KEYS.LANGUAGES, response)
 
     return { data: response }
   }
 
   async getStoredLanguages() {
     try {
-      return await onboardingStorage.getItem<LanguagePreferences>(
+      return await onboardingStorage.getItem<LanguagePreferencesResponse>(
         STORAGE_KEYS.LANGUAGES
       )
     } catch {
@@ -492,24 +466,7 @@ export class MockOnboardingApi implements IOnboardingApi {
     }
   }
 
-  async startAssessment() {
-    const response = await this.handleMockRequest('/assessment/initialize', 'POST')
-    
-    const assessmentId = `mock-${Date.now()}`
-    await onboardingStorage.setItem(STORAGE_KEYS.ASSESSMENT, {
-      id: assessmentId,
-      startedAt: new Date().toISOString(),
-    })
-
-    return {
-      data: {
-        assessmentId,
-        questions: MOCK_QUESTIONS,
-        ...response
-      }
-    }
-  }
-
+ 
   async submitAssessment(assessmentData: any) {
     const response = await this.handleMockRequest('/assessment/submit', 'POST', assessmentData)
     await onboardingStorage.removeItem(STORAGE_KEYS.ASSESSMENT)

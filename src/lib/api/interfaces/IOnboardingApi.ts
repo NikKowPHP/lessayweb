@@ -1,4 +1,3 @@
-import type { LanguageCode } from '@/constants/languages'
 import type {
   PronunciationPromptResponse,
   VocabularyPromptResponse,
@@ -18,19 +17,20 @@ import type {
   ComprehensionResponse
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
+import { LanguagePreferenceRequest, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
 
-export interface LanguagePreferences {
-  nativeLanguage: LanguageCode
-  targetLanguage: LanguageCode
-}
+
 
 export interface IOnboardingApi {
+
+
   // Language preferences
   submitLanguages(
-    nativeLanguage: LanguageCode,
-    targetLanguage: LanguageCode
-  ): Promise<{ data: LanguagePreferences }>
-  getStoredLanguages(): Promise<LanguagePreferences | null>
+    data: LanguagePreferenceRequest
+  ): Promise<{ data: LanguagePreferencesResponse }>
+
+  // Get stored languages
+  getStoredLanguages(): Promise<LanguagePreferencesResponse | null>
 
   // Pronunciation assessment
   getPronunciationPrompt(): Promise<{ data: PronunciationPromptResponse }>

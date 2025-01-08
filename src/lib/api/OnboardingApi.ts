@@ -2,10 +2,6 @@ import { Api } from './Api'
 import type { IOnboardingApi } from './interfaces/IOnboardingApi'
 import type { LanguageCode } from '@/constants/languages'
 import type {
-  AssessmentQuestion,
-  LanguagePreferences,
-} from './interfaces/IOnboardingApi'
-import type {
   PronunciationPromptResponse,
   VocabularyPromptResponse,
   GrammarPromptResponse,
@@ -19,6 +15,7 @@ import type {
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
 import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/models/requests/assessments/AssessmentRequestIndex'
+import {  LanguagePreferencesResponse, LanguagePreferenceRequest } from '../models/languages/LanguagePreferencesModel'
 
 export class OnboardingApi extends Api implements IOnboardingApi {
   private static instance: OnboardingApi
@@ -49,30 +46,21 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     return OnboardingApi.instance
   }
 
+  // Language preferences
   async submitLanguages(
-    nativeLanguage: LanguageCode,
-    targetLanguage: LanguageCode
-  ) {
-    const response = await this.post<{ success: boolean } & LanguagePreferences>(
+    data: LanguagePreferenceRequest
+  ): Promise<{ data: LanguagePreferencesResponse }> {
+    const response = await this.post<LanguagePreferencesResponse>(
       OnboardingApi.ENDPOINTS.SUBMIT_LANGUAGES,
-      {
-        nativeLanguage,
-        targetLanguage,
-      }
+      data
     )
 
-    return {
-      data: {
-        success: true,
-        nativeLanguage: response.nativeLanguage,
-        targetLanguage: response.targetLanguage,
-      },
-    }
+    return { data: response };
   }
 
   async getStoredLanguages() {
     try {
-      const response = await this.get<LanguagePreferences>(
+      const response = await this.get<LanguagePreferencesResponse>(
         OnboardingApi.ENDPOINTS.GET_LANGUAGES
       )
       return response

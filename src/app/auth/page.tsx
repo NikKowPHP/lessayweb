@@ -5,8 +5,8 @@ import { useForm } from 'react-hook-form'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { login, signup, socialAuth } from '@/store/slices/authSlice'
-import { useError } from '@/providers/ErrorProvider'
 import { selectNeedsOnboarding } from '@/store/slices/userSlice'
+import { useError } from '@/providers/ErrorProvider'
 
 type FormData = {
   email: string

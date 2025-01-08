@@ -1,5 +1,6 @@
 import { IAuthApi } from './interfaces/IAuthApi'
-import { AuthResponse, AuthCredentials, SocialProvider } from '@/types/auth'
+import { AuthResponse, AuthCredentials, SocialProvider } from '@/lib/types/auth.types'
+import { authStorage } from '@/lib/services/authStorage'
 
 export class MockAuthApi implements IAuthApi {
   private mockDelay = 500
@@ -29,10 +30,13 @@ export class MockAuthApi implements IAuthApi {
       throw new Error('Invalid credentials')
     }
 
-    return {
+    const response = {
       user,
       token: this.generateToken(),
     }
+
+    await authStorage.setAuthSession(response)
+    return response
   }
 
   async signup(credentials: AuthCredentials): Promise<AuthResponse> {
@@ -50,11 +54,13 @@ export class MockAuthApi implements IAuthApi {
     }
 
     this.mockUsers.push(newUser)
-
-    return {
+    const response = {
       user: newUser,
       token: this.generateToken(),
     }
+
+    await authStorage.setAuthSession(response)
+    return response
   }
 
   async socialAuth(provider: SocialProvider): Promise<AuthResponse> {
@@ -67,18 +73,24 @@ export class MockAuthApi implements IAuthApi {
       provider,
     }
 
-    return {
+    const response = {
       user,
       token: this.generateToken(),
     }
+
+    await authStorage.setAuthSession(response)
+    return response
   }
 
   async getCurrentUser(): Promise<AuthResponse['user']> {
     await this.delay(this.mockDelay)
-    return this.mockUsers[0]
+    const user = await authStorage.getCurrentUser()
+    if (!user) throw new Error('No authenticated user')
+    return user
   }
 
   async logout(): Promise<void> {
     await this.delay(this.mockDelay)
+    await authStorage.clearAuthSession()
   }
 } 

@@ -36,7 +36,8 @@
       "@/components/*": ["./src/components/*"],
       "@/constants/*": ["./src/lib/constants/*"],
       "@/lib/api/*": ["./src/lib/api/*"],
-      "@/models/*": ["./src/lib/models/*"]
+      "@/models/*": ["./src/lib/models/*"],
+      "@/hooks/*": ["./src/hooks/*"]
 
     }
   },

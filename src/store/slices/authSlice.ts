@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 
 import { AuthCredentials, SocialProvider } from '@/types/auth'
 import { setUserData, clearUserData } from './userSlice'
@@ -15,7 +15,7 @@ const initialState: AuthState = {
   isAuthenticated: false,
   loading: false,
   error: null,
-  token: null,
+  token: null
 }
 
 // Async thunks
@@ -85,7 +85,8 @@ export const logout = createAsyncThunk('auth/logout', async (_, { dispatch }) =>
 const authSlice = createSlice({
   name: 'auth',
   initialState,
-  reducers: {},
+  reducers: {
+  },
   extraReducers: (builder) => {
     builder
       // Login
@@ -122,9 +123,10 @@ const authSlice = createSlice({
         state.error = null
       })
       .addCase(socialAuth.fulfilled, (state, action) => {
-        state.loading = false
-        state.isAuthenticated = true
         state.token = action.payload
+        state.isAuthenticated = true
+        state.loading = false
+        state.error = null
       })
       .addCase(socialAuth.rejected, (state, action) => {
         state.loading = false

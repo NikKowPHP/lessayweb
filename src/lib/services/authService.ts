@@ -1,5 +1,5 @@
 import { IAuthApi } from '@/lib/api/interfaces/IAuthApi'
-import { AuthResponse, AuthCredentials, SocialProvider } from '@/lib/types/auth.types'
+import { AuthResponse, AuthCredentials, SocialProvider } from '@/lib/types/auth'
 import { AuthApi } from '@/lib/api/AuthApi'
 import { MockAuthApi } from '@/lib/api/MockAuthApi'
 import Cookies from 'js-cookie'

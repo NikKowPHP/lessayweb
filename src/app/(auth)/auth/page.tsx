@@ -50,14 +50,7 @@ export default function AuthPage() {
   const handleSocialAuth = async (provider: 'google' | 'github') => {
     try {
       setError(null)
-      const result = await dispatch(socialAuth(provider)).unwrap()
-      if (result) {
-        if (needsOnboarding) {
-          router.push('/onboarding')
-        } else {
-          router.push('/learning/path')
-        }
-      }
+      await dispatch(socialAuth(provider)).unwrap()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed')
     }

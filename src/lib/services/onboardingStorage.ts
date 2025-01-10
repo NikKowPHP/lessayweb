@@ -2,7 +2,6 @@ import { AbstractStorage, IStorageAdapter } from './abstractStorage'
 import { LocalForageAdapter } from './localForageAdapter'
 import { OnboardingState } from '@/lib/types/onboardingTypes'
 
-
 const STORAGE_KEY = 'onboarding_session'
 const SESSION_KEY = 'onboarding_session_cache'
 
@@ -30,9 +29,14 @@ class OnboardingStorage extends AbstractStorage {
     return OnboardingStorage.instance
   }
 
+  // Helper method to serialize state
+  private serializeState(state: OnboardingState): object {
+    return JSON.parse(JSON.stringify(state))
+  }
+
   async getSession(): Promise<OnboardingState | null> {
     try {
-      // Try session cache first for faster access
+      // Try session cache first
       if (this.sessionCache) {
         const cached = this.sessionCache.getItem(SESSION_KEY)
         if (cached) {
@@ -57,12 +61,15 @@ class OnboardingStorage extends AbstractStorage {
 
   async setSession(state: OnboardingState): Promise<void> {
     try {
+      // Serialize the state before storing
+      const serializedState = this.serializeState(state)
+
       // Update both storages in parallel
       await Promise.all([
-        this.set(STORAGE_KEY, state),
+        this.set(STORAGE_KEY, serializedState),
         this.sessionCache && 
           Promise.resolve(
-            this.sessionCache.setItem(SESSION_KEY, JSON.stringify(state))
+            this.sessionCache.setItem(SESSION_KEY, JSON.stringify(serializedState))
           )
       ])
     } catch (error) {
@@ -86,7 +93,6 @@ class OnboardingStorage extends AbstractStorage {
     }
   }
 
-  // Helper method to get specific prompt from storage
   async getPrompt<T extends keyof OnboardingState['prompts']>(
     type: T
   ): Promise<OnboardingState['prompts'][T] | null> {

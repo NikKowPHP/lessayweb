@@ -1,5 +1,5 @@
 import { IAuthApi } from './interfaces/IAuthApi'
-import { AuthResponse, AuthCredentials, SocialProvider } from '@/lib/types/auth.types'
+import { AuthResponse, AuthCredentials, SocialProvider } from '@/lib/types/auth'
 import { authStorage } from '@/lib/services/authStorage'
 
 export class MockAuthApi implements IAuthApi {

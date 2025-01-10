@@ -1,6 +1,5 @@
 import { Api } from './Api'
 import type { IOnboardingApi } from './interfaces/IOnboardingApi'
-import type { LanguageCode } from '@/constants/languages'
 import type {
   PronunciationPromptResponse,
   VocabularyPromptResponse,
@@ -14,7 +13,7 @@ import type {
   ComprehensionResponse,
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
-import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/models/requests/assessments/AssessmentRequestIndex'
+import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/models/requests/assessments/AssessmentRequests'
 import {  LanguagePreferencesResponse, LanguagePreferenceRequest } from '../models/languages/LanguagePreferencesModel'
 
 export class OnboardingApi extends Api implements IOnboardingApi {

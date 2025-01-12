@@ -13,7 +13,7 @@ export interface OnboardingSession {
   assessmentProgress: number
   prompts: AssessmentPrompts
   responses: AssessmentResponses
-  promptLoadStatus: Record<AssessmentType, boolean>
+  promptLoadStatus: Record<AssessmentType, boolean | undefined>
 }
 
 

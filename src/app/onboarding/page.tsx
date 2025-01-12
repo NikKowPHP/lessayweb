@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAppDispatch } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import {
   updateUserLanguages,
   completeUserOnboarding,
 } from '@/store/slices/userSlice'
 import { rehydrateState, submitLanguagePreferences } from '@/store/slices/onboardingSlice'
 import type { LanguageCode } from '@/constants/languages'
+import { logger } from '@/lib/utils/logger'
 
 const LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -29,10 +30,14 @@ export default function OnboardingPage() {
   const [nativeLanguage, setNativeLanguage] = useState('')
   const [targetLanguage, setTargetLanguage] = useState('')
   const [error, setError] = useState<string | null>(null)
-
+  const onboardingState = useAppSelector(state => state.onboarding)
   useEffect(() => {
     dispatch(rehydrateState())
   }, [dispatch])
+  useEffect(() => {
+    // dispatch(getPrompt(AssessmentType.Pronunciation))
+    console.log('onboardingState', onboardingState)
+  }, [onboardingState])
 
 
   const handleSubmit = async (e: React.FormEvent) => {

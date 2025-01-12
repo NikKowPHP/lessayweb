@@ -23,7 +23,9 @@ export const startAssessment = createAsyncThunk(
 export const submitLanguagePreferences = createAsyncThunk(
   'onboarding/submitLanguagePreferences',
   async (preferences: { nativeLanguage: LanguageCode; targetLanguage: LanguageCode }) => {
-    return await onboardingService.submitLanguagePreferences(preferences)
+    await onboardingService.submitLanguagePreferences(preferences)
+    // initiate prompt fetcihng. 
+    return await onboardingService.initializePromptQueue(AssessmentType.Pronunciation)
   }
 )
 

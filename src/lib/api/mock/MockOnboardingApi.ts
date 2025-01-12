@@ -7,6 +7,7 @@ import { LanguagePreferenceRequest, LanguagePreferences, LanguagePreferencesResp
 import { OnboardingState, OnboardingStep, initialOnboardingState } from '@/lib/types/onboardingTypes'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { mockRoutes } from './MockRoutes'
+import { logger } from '@/lib/utils/logger'
 
 
 
@@ -73,24 +74,28 @@ export class MockOnboardingApi implements IOnboardingApi {
   async getStoredLanguages(): Promise<LanguagePreferencesResponse | null> {
     try {
       const state = await onboardingStorage.getSession()
+      
+      logger.debug('Retrieved stored languages', { 
+        preferences: state?.languagePreferences 
+      })
+
       if (!state?.languagePreferences) {
+        logger.info('No language preferences found')
         return null
       }
-  
-      // Transform LanguagePreferences to LanguagePreferencesResponse
+
       const response: LanguagePreferencesResponse = {
         status: 'success',
         data: {
           ...state.languagePreferences,
           timestamp: new Date().toISOString(),
-          preferences_id: state.languagePreferences.preferences_id || '123',
-
+          preferences_id: '123',
         }
       }
-  
+
       return response
     } catch (error) {
-      console.error('Failed to get stored languages:', error)
+      logger.error('Failed to get stored languages', error as Error)
       return null
     }
   }

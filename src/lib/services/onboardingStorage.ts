@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger'
 import { AbstractStorage, IStorageAdapter } from './abstractStorage'
 import { LocalForageAdapter } from './localForageAdapter'
 import { OnboardingState } from '@/lib/types/onboardingTypes'
@@ -65,6 +66,10 @@ class OnboardingStorage extends AbstractStorage {
             this.sessionCache.setItem(SESSION_KEY, JSON.stringify(state))
           )
       ])
+      logger.info('Session state updated', {
+        step: state.currentStep,
+        assessmentProgress: state.assessmentProgress
+      })
     } catch (error) {
       console.error('Failed to set session:', error)
       throw error
@@ -81,7 +86,7 @@ class OnboardingStorage extends AbstractStorage {
           )
       ])
     } catch (error) {
-      console.error('Failed to clear session:', error)
+      logger.error('Failed to clear session', error as Error)
       throw error
     }
   }

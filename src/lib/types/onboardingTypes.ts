@@ -4,6 +4,7 @@ import { VocabularyResponse } from "../models/responses/assessments/VocabularyRe
 import { GrammarResponse } from "../models/responses/assessments/GrammarResponse"
 import { ComprehensionResponse } from "../models/responses/assessments/ComprehensionResponse"
 import { FinalAssessmentResponse } from "../models/responses/assessments/FinalAssessmentResponse"
+import { LanguagePreferences } from "../models/languages/LanguagePreferencesModel"
 
 export interface OnboardingSession {
   assessmentId: string | null
@@ -64,6 +65,7 @@ export interface OnboardingState {
   sessionLoaded: boolean
   finalAssessment: FinalAssessmentResponse | null
   promptLoadStatus: Record<AssessmentType, boolean>
+  languagePreferences: LanguagePreferences | null
 }
 
 

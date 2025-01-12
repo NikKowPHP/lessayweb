@@ -59,13 +59,29 @@ export const submitFinalAssessment = createAsyncThunk(
   }
 )
 
-// New thunk for state rehydration
+// Update rehydrateState thunk
 export const rehydrateState = createAsyncThunk(
   'onboarding/rehydrate',
-  async () => {
-    return await onboardingStorage.getSession()
+  async (_, { dispatch }) => {
+    const savedState = await onboardingStorage.getSession()
+    
+    if (savedState) {
+      // Dispatch any necessary actions based on the saved state
+      if (savedState.currentStep) {
+        dispatch(setCurrentStep(savedState.currentStep))
+      }
+      if (savedState.assessmentType) {
+        dispatch(setAssessmentType(savedState.assessmentType))
+      }
+      if (savedState.assessmentProgress) {
+        dispatch(updateAssessmentProgress(savedState.assessmentProgress))
+      }
+    }
+    
+    return savedState
   }
 )
+
 
 const initialState: OnboardingState = {
   currentStep: OnboardingStep.Language,
@@ -79,7 +95,8 @@ const initialState: OnboardingState = {
   promptsLoaded: false,
   sessionLoaded: false,
   finalAssessment: null,
-  promptLoadStatus: {} as Record<AssessmentType, boolean>
+  promptLoadStatus: {} as Record<AssessmentType, boolean>,
+  languagePreferences: null
 }
 
 const onboardingSlice = createSlice({
@@ -134,25 +151,28 @@ const onboardingSlice = createSlice({
         state.finalAssessment = action.payload
         state.currentStep = OnboardingStep.Complete
       })
-      // Add rehydration case
-      .addCase(rehydrateState.fulfilled, (state, action) => {
-        if (action.payload) {
-          return {
-            ...state,
-            ...action.payload,
-            isRehydrated: true
-          }
-        }
-        return {
-          ...state,
-          isRehydrated: true
-        }
-      })
+      // rehydrate state
+   .addCase(rehydrateState.fulfilled, (state, action) => {
+    if (action.payload) {
+      return {
+        ...initialState,
+        ...action.payload,
+        sessionLoaded: true,
+        isRehydrated: true,
+      }
+    }
+    return {
+      ...state,
+      sessionLoaded: true,
+      isRehydrated: true,
+    }
+  })
       // Persist state on all successful actions
       .addMatcher(
-        (action) => action.type.startsWith('onboarding/') && action.type.endsWith('/fulfilled'),
+        (action) => action.type.startsWith('onboarding/'),
         (state) => {
-          onboardingStorage.setSession(state)
+          // Persist state after any onboarding action
+          onboardingStorage.setSession(state).catch(console.error)
           return state
         }
       )

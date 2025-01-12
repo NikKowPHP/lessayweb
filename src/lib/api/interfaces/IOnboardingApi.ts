@@ -9,7 +9,7 @@ import type {
   VocabularyAssessmentRequest,
   GrammarAssessmentRequest,
   ComprehensionAssessmentRequest
-} from '@/models/requests/assessments/AssessmentRequestIndex'
+} from '@/models/requests/assessments/AssessmentRequests'
 import type {
   PronunciationResponse,
   VocabularyResponse,

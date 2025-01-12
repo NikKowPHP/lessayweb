@@ -5,7 +5,7 @@ interface LoadingSpinnerProps {
   color?: 'primary' | 'white'
 }
 
-export default function LoadingSpinner({
+export function LoadingSpinner({
   size = 'medium',
   color = 'primary',
 }: LoadingSpinnerProps) {

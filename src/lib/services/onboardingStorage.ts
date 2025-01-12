@@ -2,6 +2,7 @@ import { logger } from '../utils/logger'
 import { AbstractStorage, IStorageAdapter } from './abstractStorage'
 import { LocalForageAdapter } from './localForageAdapter'
 import { OnboardingState } from '@/lib/types/onboardingTypes'
+import { cloneDeep } from 'lodash'
 
 
 const STORAGE_KEY = 'onboarding_session'
@@ -31,13 +32,32 @@ class OnboardingStorage extends AbstractStorage {
     return OnboardingStorage.instance
   }
 
+  private serializeState(state: OnboardingState): string {
+    try {
+      const clonedState = cloneDeep(state)
+      return JSON.stringify(clonedState)
+    } catch (error) {
+      logger.error('Failed to serialize state:', error as Error)
+      throw error
+    }
+  }
+
+  private deserializeState(serializedState: string): OnboardingState {
+    try {
+      return JSON.parse(serializedState) as OnboardingState
+    } catch (error) {
+      logger.error('Failed to deserialize state:', error as Error)
+      throw error
+    }
+  }
+
   async getSession(): Promise<OnboardingState | null> {
     try {
       // Try session cache first for faster access
       if (this.sessionCache) {
         const cached = this.sessionCache.getItem(SESSION_KEY)
         if (cached) {
-          return JSON.parse(cached) as OnboardingState
+          return this.deserializeState(cached)
         }
       }
 
@@ -46,32 +66,38 @@ class OnboardingStorage extends AbstractStorage {
       
       // Update session cache if data found
       if (persisted && this.sessionCache) {
-        this.sessionCache.setItem(SESSION_KEY, JSON.stringify(persisted))
+        this.sessionCache.setItem(SESSION_KEY, this.serializeState(persisted))
       }
       
       return persisted
     } catch (error) {
-      console.error('Failed to get session:', error)
+      logger.error('Failed to get session:', error as Error)
       return null
     }
   }
 
   async setSession(state: OnboardingState): Promise<void> {
     try {
+      const clonedState = cloneDeep(state)
+      const serializedState = this.serializeState(clonedState)
+      
       // Update both storages in parallel
       await Promise.all([
-        this.set(STORAGE_KEY, state),
+        this.set(STORAGE_KEY, clonedState),
         this.sessionCache && 
           Promise.resolve(
-            this.sessionCache.setItem(SESSION_KEY, JSON.stringify(state))
+            this.sessionCache.setItem(SESSION_KEY, serializedState)
           )
       ])
+
       logger.info('Session state updated', {
-        step: state.currentStep,
-        assessmentProgress: state.assessmentProgress
+        step: clonedState.currentStep,
+        assessmentProgress: clonedState.assessmentProgress
       })
     } catch (error) {
-      console.error('Failed to set session:', error)
+      logger.error('Failed to set session:', error as Error, {
+        state: JSON.stringify(state, null, 2)
+      })
       throw error
     }
   }

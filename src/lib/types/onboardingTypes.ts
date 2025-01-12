@@ -4,7 +4,7 @@ import { VocabularyResponse } from "../models/responses/assessments/VocabularyRe
 import { GrammarResponse } from "../models/responses/assessments/GrammarResponse"
 import { ComprehensionResponse } from "../models/responses/assessments/ComprehensionResponse"
 import { FinalAssessmentResponse } from "../models/responses/assessments/FinalAssessmentResponse"
-import { LanguagePreferences } from "../models/languages/LanguagePreferencesModel"
+import { LanguagePreferences, LanguagePreferencesState } from "../models/languages/LanguagePreferencesModel"
 
 export interface OnboardingSession {
   assessmentId: string | null
@@ -65,7 +65,7 @@ export interface OnboardingState {
   sessionLoaded: boolean
   finalAssessment: FinalAssessmentResponse | null
   promptLoadStatus: Record<AssessmentType, boolean>
-  languagePreferences: LanguagePreferences | null
+  languagePreferences: LanguagePreferencesState | null
 }
 
 
@@ -112,4 +112,25 @@ export const OnboardingStepConfigs: Record<OnboardingStep, OnboardingStepConfig>
     nextStep: null,
     prevStep: OnboardingStep.Assessment
   }
+}
+
+export const initialOnboardingState: OnboardingState = {
+  currentStep: OnboardingStep.Language,
+  assessmentType: null,
+  loading: false,
+  error: null,
+  assessmentProgress: 0,
+  assessmentId: null,
+  prompts: {} as Record<AssessmentType, any>,
+  responses: {} as Record<AssessmentType, any>,
+  promptsLoaded: false,
+  sessionLoaded: false,
+  finalAssessment: null,
+  promptLoadStatus: {
+    [AssessmentType.Pronunciation]: false,
+    [AssessmentType.Vocabulary]: false,
+    [AssessmentType.Grammar]: false,
+    [AssessmentType.Comprehension]: false
+  },
+  languagePreferences: null
 }

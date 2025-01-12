@@ -1,13 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch } from '@/store/hooks'
 import {
   updateUserLanguages,
   completeUserOnboarding,
 } from '@/store/slices/userSlice'
-import { submitLanguagePreferences } from '@/store/slices/onboardingSlice'
+import { rehydrateState, submitLanguagePreferences } from '@/store/slices/onboardingSlice'
 import type { LanguageCode } from '@/constants/languages'
 
 const LANGUAGES = [
@@ -29,6 +29,11 @@ export default function OnboardingPage() {
   const [nativeLanguage, setNativeLanguage] = useState('')
   const [targetLanguage, setTargetLanguage] = useState('')
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    dispatch(rehydrateState())
+  }, [dispatch])
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

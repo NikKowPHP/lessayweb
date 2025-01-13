@@ -3,13 +3,13 @@ import type {
   VocabularyPromptResponse,
   GrammarPromptResponse,
   ComprehensionPromptResponse
-} from '@/models/responses/prompts/PromptResponseIndex'
+} from '@/lib/models/responses/prompts/PromptResponses'
 import type {
   PronunciationAssessmentRequest,
   VocabularyAssessmentRequest,
   GrammarAssessmentRequest,
   ComprehensionAssessmentRequest
-} from '@/models/requests/assessments/AssessmentRequests'
+} from '@/lib/models/requests/assessments/AssessmentRequests'
 import type {
   PronunciationResponse,
   VocabularyResponse,

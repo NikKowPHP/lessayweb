@@ -15,6 +15,7 @@ import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, Pronunciation
 import { AssessmentOrder, OnboardingSession, OnboardingStep } from '../types/onboardingTypes'
 import { AssessmentType } from '../types/onboardingTypes'
 import { logger } from '../utils/logger'
+import { languagePreferencesStorage } from './languagePreferencesStorage'
 
 
 class OnboardingService {
@@ -227,11 +228,17 @@ class OnboardingService {
         targetLanguage: preferences.targetLanguage
       }
       const response = await this.api.submitLanguages(request)
+      languagePreferencesStorage.setPreferences({
+        nativeLanguage: preferences.nativeLanguage,
+        targetLanguage: preferences.targetLanguage
+      })
       return response.data
     } catch (error) {
       throw new Error('Failed to submit language preferences')
     }
   }
+
+
 
   async getStoredLanguages() {
     try {

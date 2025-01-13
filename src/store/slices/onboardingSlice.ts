@@ -11,6 +11,8 @@ import {
 import type { LanguageCode } from '@/constants/languages'
 import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
+import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
+import { logger } from '@/lib/utils/logger'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(
@@ -24,7 +26,13 @@ export const submitLanguagePreferences = createAsyncThunk(
   'onboarding/submitLanguagePreferences',
   async (preferences: { nativeLanguage: LanguageCode; targetLanguage: LanguageCode }) => {
     await onboardingService.submitLanguagePreferences(preferences)
-    // initiate prompt fetcihng. 
+    // Store preferences locally
+    await languagePreferencesStorage.setPreferences({
+      ...preferences,
+      isSubmitting: false,
+      error: null
+    })
+    // Initialize prompt queue
     return await onboardingService.initializePromptQueue(AssessmentType.Pronunciation)
   }
 )
@@ -65,10 +73,14 @@ export const submitFinalAssessment = createAsyncThunk(
 export const rehydrateState = createAsyncThunk(
   'onboarding/rehydrate',
   async (_, { dispatch }) => {
-    const savedState = await onboardingStorage.getSession()
+    const [savedState, languagePrefs] = await Promise.all([
+      onboardingStorage.getSession(),
+      languagePreferencesStorage.getPreferences()
+    ])
+    console.debug('savedState', savedState)
+    console.debug('languagePrefs', languagePrefs)
     
     if (savedState) {
-      // Dispatch any necessary actions based on the saved state
       if (savedState.currentStep) {
         dispatch(setCurrentStep(savedState.currentStep))
       }
@@ -80,7 +92,10 @@ export const rehydrateState = createAsyncThunk(
       }
     }
     
-    return savedState
+    return {
+      onboardingState: savedState,
+      languagePreferences: languagePrefs
+    }
   }
 )
 

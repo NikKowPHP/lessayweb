@@ -1,3 +1,4 @@
+import { onboardingService } from '@/lib/services/onboardingService'
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
 
 export interface UserState {
@@ -27,7 +28,9 @@ export const updateUserLanguages = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      // You can add API call here if needed
+      console.debug('native', native)
+      console.debug('target', target)
+    // todo: update user languages
       return { native, target }
     } catch (error) {
       return rejectWithValue(

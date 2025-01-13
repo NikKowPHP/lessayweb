@@ -1,4 +1,4 @@
-import { ComprehensionPromptData, GrammarPromptData, PronunciationPromptData, VocabularyPromptData } from "../models/responses/prompts/PromptResponseIndex"
+import { ComprehensionPromptData, GrammarPromptData, PronunciationPromptData, VocabularyPromptData } from "../models/responses/prompts/PromptResponses"
 import { PronunciationResponse } from "../models/responses/assessments/PronunciationResponse"
 import { VocabularyResponse } from "../models/responses/assessments/VocabularyResponse"
 import { GrammarResponse } from "../models/responses/assessments/GrammarResponse"

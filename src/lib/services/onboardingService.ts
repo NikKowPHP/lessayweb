@@ -8,10 +8,10 @@ import type {
   VocabularyPromptResponse,
   GrammarPromptResponse,
   ComprehensionPromptResponse
-} from '@/lib/models/responses/prompts/PromptResponseIndex'
+} from '@/lib/models/responses/prompts/PromptResponses'
 import {  LanguagePreferenceRequest, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
 import { storageService } from './storageService'
-import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '../models/requests/assessments/AssessmentRequests'
+import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { AssessmentOrder, OnboardingSession, OnboardingStep } from '../types/onboardingTypes'
 import { AssessmentType } from '../types/onboardingTypes'
 import { logger } from '../utils/logger'

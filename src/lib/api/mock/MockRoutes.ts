@@ -1,5 +1,3 @@
-
-
 export interface MockRoute {
     path: string
     method: 'GET' | 'POST'
@@ -11,54 +9,84 @@ export const mockRoutes: MockRoute[] = [
       path: '/pronunciation/prompt',
       method: 'GET',
       response: {
-        prompt_text: 'Please read the following text: "The quick brown fox jumps over the lazy dog."',
-        target_phonemes: ['ð', 'θ', 'æ'],
-        difficulty_level: 'intermediate'
+        status: 'success',
+        data: {
+          prompt_text: 'Please read the following text: "The quick brown fox jumps over the lazy dog."',
+          target_phonemes: ['ð', 'θ', 'æ'],
+          difficulty_level: 'intermediate'
+        }
       }
     },
     {
       path: '/vocabulary/prompt',
       method: 'GET',
       response: {
-        image_url: 'https://example.com/mock-image.jpg',
-        topic: 'daily_routine',
-        expected_vocabulary: ['breakfast', 'work', 'commute']
+        status: 'success',
+        data: {
+          image_url: 'https://gratisography.com/wp-content/uploads/2024/10/gratisography-cool-cat-800x525.jpg',
+          topic: 'daily_routine',
+          expected_vocabulary: ['breakfast', 'work', 'commute'],
+          categories: [
+            {
+              name: 'Morning Activities',
+              words: ['breakfast', 'shower', 'dress'],
+              description: 'Activities typically done in the morning'
+            }
+          ],
+          hints: ['Think about what you do when you first wake up'],
+          difficulty_level: 'intermediate'
+        }
       }
     },
     {
       path: '/grammar/prompt',
       method: 'GET',
       response: {
-        prompt_text: 'Describe your daily routine using present tense verbs.',
-        target_structures: ['simple present', 'frequency adverbs'],
-        example_sentence: 'I usually wake up at 7 AM.'
+        status: 'success',
+        data: {
+          prompt_text: 'Describe your daily routine using present tense verbs.',
+          target_structures: ['simple present', 'frequency adverbs'],
+          example_sentence: 'I usually wake up at 7 AM.',
+          difficulty_level: 'intermediate',
+          grammar_points: {
+            'simple present': ['regular verbs', 'irregular verbs'],
+            'frequency adverbs': ['always', 'usually', 'sometimes']
+          }
+        }
       }
     },
     {
       path: '/comprehension/prompt',
       method: 'GET',
       response: {
-        youtube_video_id: 'dQw4w9WgXcQ',
-        title: 'Daily Conversations in German',
-        description: 'Basic conversations in a café setting',
-        duration_seconds: 180,
-        language_code: 'de',
-        difficulty: 'A2',
-        questions: [
-          {
-            id: 'q1',
-            question: 'Describe what happened when the customer first entered the café.',
-            context_timestamp: '00:15',
-            difficulty: 'A2',
-            expected_concepts: ['greeting', 'politeness', 'time_of_day', 'customer_service'],
-            evaluation_criteria: {
-              content_relevance: 0.4,
-              language_accuracy: 0.3,
-              vocabulary_usage: 0.3
-            },
-            hint: 'Focus on the interaction between the customer and staff'
+        status: 'success',
+        data: {
+          youtube_video_id: 'dQw4w9WgXcQ',
+          title: 'Daily Conversations in German',
+          description: 'Basic conversations in a café setting',
+          duration_seconds: 180,
+          language_code: 'de',
+          difficulty: 'A2',
+          questions: [
+            {
+              id: 'q1',
+              question: 'Describe what happened when the customer first entered the café.',
+              context_timestamp: '00:15',
+              difficulty: 'A2',
+              expected_concepts: ['greeting', 'politeness', 'time_of_day', 'customer_service'],
+              evaluation_criteria: {
+                content_relevance: 0.4,
+                language_accuracy: 0.3,
+                vocabulary_usage: 0.3
+              },
+              hint: 'Focus on the interaction between the customer and staff'
+            }
+          ],
+          transcript_highlights: {
+            '00:15': 'Guten Morgen! Was kann ich für Sie tun?',
+            '00:20': 'Ich hätte gerne einen Kaffee, bitte.'
           }
-        ]
+        }
       }
     },
     {

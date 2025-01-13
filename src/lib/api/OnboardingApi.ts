@@ -6,7 +6,7 @@ import type {
   VocabularyPromptResponse,
   GrammarPromptResponse,
   ComprehensionPromptResponse,
-} from '@/models/responses/prompts/PromptResponseIndex'
+} from '@/lib/models/responses/prompts/PromptResponses'
 import type {
   PronunciationResponse,
   VocabularyResponse,
@@ -14,8 +14,8 @@ import type {
   ComprehensionResponse,
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
-import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/models/requests/assessments/AssessmentRequestIndex'
-import {  LanguagePreferencesResponse, LanguagePreferenceRequest } from '../models/languages/LanguagePreferencesModel'
+import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
+import {  LanguagePreferencesResponse, LanguagePreferenceRequest } from '@/lib/models/languages/LanguagePreferencesModel'
 
 export class OnboardingApi extends Api implements IOnboardingApi {
   private static instance: OnboardingApi

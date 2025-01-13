@@ -29,8 +29,6 @@ export const submitLanguagePreferences = createAsyncThunk(
     // Store preferences locally
     await languagePreferencesStorage.setPreferences({
       ...preferences,
-      isSubmitting: false,
-      error: null
     })
     // Initialize prompt queue
     return await onboardingService.initializePromptQueue(AssessmentType.Pronunciation)

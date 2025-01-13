@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { startAssessment } from '@/store/slices/onboardingSlice'
+import { AssessmentType } from '@/lib/types/onboardingTypes'
 
 export default function AssessmentIntroPage() {
   const router = useRouter()
@@ -12,7 +13,7 @@ export default function AssessmentIntroPage() {
 
   const handleStartAssessment = async () => {
     try {
-      await dispatch(startAssessment()).unwrap()
+      await dispatch(startAssessment(AssessmentType.Pronunciation)).unwrap()
       router.push('/onboarding/assessment/question')
     } catch (err) {
       // Error is handled by the slice

@@ -14,7 +14,7 @@ import { storageService } from './storageService'
 import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { AssessmentOrder, OnboardingSession, OnboardingStep } from '../types/onboardingTypes'
 import { AssessmentType } from '../types/onboardingTypes'
-import { logger } from '../utils/logger'
+// import { logger } from '../utils/logger'
 import { languagePreferencesStorage } from './languagePreferencesStorage'
 
 
@@ -44,11 +44,11 @@ class OnboardingService {
             comprehension: firstType === AssessmentType.Comprehension
           }
         })
-        logger.info('Priority prompt loaded and stored', { type: firstType })
+        console.info('Priority prompt loaded and stored', { type: firstType })
         return prompt
       })
       .catch((error) => {
-        logger.error('Failed to fetch priority prompt', error as Error, { type: firstType })
+        console.error('Failed to fetch priority prompt', error as Error, { type: firstType })
         throw error
       })
     
@@ -70,11 +70,11 @@ class OnboardingService {
               [type]: true
             }
           })
-          logger.info('Background prompt loaded and stored', { type })
+          console.info('Background prompt loaded and stored', { type })
           return prompt
         })
         .catch((error) => {
-          logger.error('Failed to fetch background prompt', error as Error, { type })
+          console.error('Failed to fetch background prompt', error as Error, { type })
           throw error
         })
       
@@ -86,14 +86,14 @@ class OnboardingService {
       const priorityPrompt = await priorityPromptPromise
       return priorityPrompt
     } catch (error) {
-      logger.error('Failed to initialize prompt queue', error as Error)
+      console.error('Failed to initialize prompt queue', error as Error)
       throw error
     }
   }
   
   private async fetchPrompt(type: AssessmentType) {
     if (!type) {
-      logger.error('Invalid assessment type provided to fetchPrompt',  type )
+      console.error('Invalid assessment type provided to fetchPrompt',  type )
       throw new Error('Invalid assessment type')
     }
 
@@ -105,12 +105,12 @@ class OnboardingService {
     }
 
     if (!methods[type]) {
-      logger.info('No fetch method found for assessment type',  {type } )
+      console.info('No fetch method found for assessment type',  {type } )
       throw new Error(`Unsupported assessment type: ${type}`)
     }
 
     try {
-      logger.info('Fetching prompt', { type })
+      console.info('Fetching prompt', { type })
       const response = await methods[type]()
       
       if (!response || !response.data) {
@@ -118,14 +118,14 @@ class OnboardingService {
       }
       
       await this.updatePromptLoadStatus(type, true)
-      logger.debug('Prompt fetched successfully', { 
+      console.debug('Prompt fetched successfully', { 
         type,
         hasData: !!response?.data 
       })
       
       return response.data
     } catch (error) {
-      logger.error('Failed to fetch prompt', error as Error, { type })
+      console.error('Failed to fetch prompt', error as Error, { type })
       await this.updatePromptLoadStatus(type, false)
       throw new Error(`Failed to fetch ${type} prompt: ${(error as Error).message}`)
     }
@@ -165,11 +165,11 @@ class OnboardingService {
   async startAssessment(firstType: AssessmentType) {
     try {
       if (!firstType || !Object.values(AssessmentType).includes(firstType)) {
-        logger.info('Invalid first assessment type', { firstType })
+        console.info('Invalid first assessment type', { firstType })
         throw new Error('Invalid assessment type')
       }
 
-      logger.info('Starting assessment', { firstType })
+      console.info('Starting assessment', { firstType })
       
       const initialSession: OnboardingSession = {
         assessmentId: null,
@@ -187,7 +187,7 @@ class OnboardingService {
       }
       
       await storageService.setOnboardingSession(initialSession)
-      logger.debug('Initial session created', { session: initialSession })
+      console.debug('Initial session created', { session: initialSession })
       
       // Get first prompt while initiating other fetches
       const firstPrompt = await this.initializePromptQueue(firstType)
@@ -203,14 +203,14 @@ class OnboardingService {
         }
       })
       
-      logger.info('Assessment started successfully', { 
+      console.info('Assessment started successfully', { 
         type: firstType,
         hasPrompt: !!firstPrompt 
       })
       
       return firstPrompt
     } catch (error) {
-      logger.error('Failed to start assessment', error as Error, {
+      console.error('Failed to start assessment', error as Error, {
         firstType,
         error: (error as Error).message
       })

@@ -1,4 +1,4 @@
-import { logger } from '../utils/logger'
+// import { logger } from '../utils/logger'
 import { AbstractStorage, IStorageAdapter } from './abstractStorage'
 import { LocalForageAdapter } from './localForageAdapter'
 import { LanguagePreferences } from '../models/languages/LanguagePreferencesModel'
@@ -48,7 +48,7 @@ class LanguagePreferencesStorage extends AbstractStorage {
       
       return persisted
     } catch (error) {
-      logger.error('Failed to get language preferences:', error as Error)
+      console.error('Failed to get language preferences:', error as Error)
       return null
     }
   }
@@ -65,12 +65,12 @@ class LanguagePreferencesStorage extends AbstractStorage {
           )
       ])
 
-      logger.info('Language preferences updated', {
+      console.info('Language preferences updated', {
         native: clonedPreferences.nativeLanguage,
         target: clonedPreferences.targetLanguage
       })
     } catch (error) {
-      logger.error('Failed to set language preferences:', error as Error)
+      console.error('Failed to set language preferences:', error as Error)
       throw error
     }
   }
@@ -85,7 +85,7 @@ class LanguagePreferencesStorage extends AbstractStorage {
           )
       ])
     } catch (error) {
-      logger.error('Failed to clear language preferences', error as Error)
+      console.error('Failed to clear language preferences', error as Error)
       throw error
     }
   }

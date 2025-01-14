@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { initializeAuth } from '@/store/slices/authSlice'
-import { logger } from '@/lib/utils/logger'
+// import { logger } from '@/lib/utils/logger'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 export default function AuthLayout({
@@ -24,7 +24,7 @@ export default function AuthLayout({
       try {
         await dispatch(initializeAuth()).unwrap()
       } catch (error) {
-        logger.error('Failed to initialize auth', error as Error)
+        console.error('Failed to initialize auth', error as Error)
       }
     }
 
@@ -33,7 +33,7 @@ export default function AuthLayout({
 
   useEffect(() => {
     if (isAuthenticated) {
-      logger.info('User is authenticated, checking onboarding status', {
+      console.info('User is authenticated, checking onboarding status', {
         needsOnboarding,
         currentStep
       })

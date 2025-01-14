@@ -12,7 +12,6 @@ import type { LanguageCode } from '@/constants/languages'
 import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
-import { logger } from '@/lib/utils/logger'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(

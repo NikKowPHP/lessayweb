@@ -9,7 +9,7 @@ import {
 } from '@/store/slices/userSlice'
 import { rehydrateState, submitLanguagePreferences } from '@/store/slices/onboardingSlice'
 import type { LanguageCode } from '@/constants/languages'
-import { logger } from '@/lib/utils/logger'
+// import { logger } from '@/lib/utils/logger'
 
 const LANGUAGES = [
   { code: 'en', name: 'English' },

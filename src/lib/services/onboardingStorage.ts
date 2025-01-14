@@ -1,4 +1,3 @@
-import { logger } from '../utils/logger'
 import { AbstractStorage, IStorageAdapter } from './abstractStorage'
 import { LocalForageAdapter } from './localForageAdapter'
 import { OnboardingState } from '@/lib/types/onboardingTypes'
@@ -37,7 +36,7 @@ class OnboardingStorage extends AbstractStorage {
       const clonedState = cloneDeep(state)
       return JSON.stringify(clonedState)
     } catch (error) {
-      logger.error('Failed to serialize state:', error as Error)
+      console.error('Failed to serialize state:', error as Error)
       throw error
     }
   }
@@ -46,7 +45,7 @@ class OnboardingStorage extends AbstractStorage {
     try {
       return JSON.parse(serializedState) as OnboardingState
     } catch (error) {
-      logger.error('Failed to deserialize state:', error as Error)
+      console.error('Failed to deserialize state:', error as Error)
       throw error
     }
   }
@@ -71,7 +70,7 @@ class OnboardingStorage extends AbstractStorage {
       
       return persisted
     } catch (error) {
-      logger.error('Failed to get session:', error as Error)
+      console.error('Failed to get session:', error as Error)
       return null
     }
   }
@@ -90,12 +89,9 @@ class OnboardingStorage extends AbstractStorage {
           )
       ])
 
-      logger.info('Session state updated', {
-        step: clonedState.currentStep,
-        assessmentProgress: clonedState.assessmentProgress
-      })
+      console.info('Session state updated', clonedState)
     } catch (error) {
-      logger.error('Failed to set session:', error as Error, {
+      console.error('Failed to set session:', error as Error, {
         state: JSON.stringify(state, null, 2)
       })
       throw error
@@ -112,7 +108,7 @@ class OnboardingStorage extends AbstractStorage {
           )
       ])
     } catch (error) {
-      logger.error('Failed to clear session', error as Error)
+      console.error('Failed to clear session', error as Error)
       throw error
     }
   }

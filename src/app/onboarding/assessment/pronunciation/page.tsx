@@ -9,88 +9,57 @@ import { PronunciationAssessmentRequest } from '@/lib/models/requests/assessment
 import { RecordingHelper } from '@/lib/utils/recording'
 import AssessmentLayout from '../layout'
 
+import { 
+  startRecording, 
+  stopRecording, 
+  resetRecording, 
+  updateDuration,
+  selectRecordingState 
+} from '@/store/slices/recordingSlice'
+
 export default function PronunciationAssessmentPage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const { prompts, loading, assessmentId } = useAppSelector((state) => state.onboarding)
-  const [recording, setRecording] = useState(false)
-  const [audioData, setAudioData] = useState<Blob | null>(null)
-  const [recordingDuration, setRecordingDuration] = useState(0)
-  const [error, setError] = useState<string | null>(null)
-  const [audioUrl, setAudioUrl] = useState<string | null>(null)
-  
-  const recorderRef = useRef<RecordingHelper>(new RecordingHelper())
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
+  const { prompts,  assessmentId } = useAppSelector((state) => state.onboarding)
+  const { 
+    isRecording, 
+    audioData, 
+    audioUrl, 
+    duration, 
+    error, 
+    loading 
+  } = useAppSelector(selectRecordingState)
 
   const prompt = prompts[AssessmentType.Pronunciation]
 
   useEffect(() => {
+    let durationTimer: NodeJS.Timeout
+
+    if (isRecording) {
+      durationTimer = setInterval(() => {
+        dispatch(updateDuration())
+      }, 1000)
+    }
+
     return () => {
-      // Cleanup on unmount
-      if (timerRef.current) {
-        clearInterval(timerRef.current)
-      }
-      // Cleanup audio URL
-      if (audioUrl) {
-        URL.revokeObjectURL(audioUrl)
+      if (durationTimer) {
+        clearInterval(durationTimer)
       }
     }
-  }, [audioUrl])
+  }, [isRecording, dispatch])
 
   const handleRecordingToggle = async () => {
     try {
-      if (!recording) {
-        // Start new recording
-        await recorderRef.current.startRecording()
-        setRecording(true)
-        setError(null)
-        
-        // Reset previous recording if exists
-        if (audioUrl) {
-          URL.revokeObjectURL(audioUrl)
-          setAudioUrl(null)
-        }
-        setAudioData(null)
-        
-        // Start duration timer
-        timerRef.current = setInterval(() => {
-          const currentDuration = recorderRef.current.getCurrentDuration()
-          setRecordingDuration(currentDuration)
-        }, 1000)
+      if (!isRecording) {
+        await dispatch(startRecording()).unwrap()
       } else {
-        // Stop recording
-        const audioBlob = await recorderRef.current.stopRecording()
-        const finalDuration = recorderRef.current.getFinalDuration()
-        setAudioData(audioBlob)
-        setRecordingDuration(finalDuration)
-        setRecording(false)
-        
-        // Create new audio URL
-        const url = URL.createObjectURL(audioBlob)
-        setAudioUrl(url)
-        
-        // Clear timer
-        if (timerRef.current) {
-          clearInterval(timerRef.current)
-        }
+        await dispatch(stopRecording()).unwrap()
       }
     } catch (error) {
       console.error('Recording error:', error)
-      setError('Failed to access microphone. Please ensure microphone permissions are granted.')
-      setRecording(false)
     }
   }
 
-  const handleRetry = () => {
-    // Clean up existing recording
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl)
-      setAudioUrl(null)
-    }
-    setAudioData(null)
-    setRecordingDuration(0)
-    setError(null)
-  }
 
   const handleSubmit = async () => {
     if (!audioData || !prompt) {
@@ -98,13 +67,12 @@ export default function PronunciationAssessmentPage() {
     }
   
     try {
-      const base64Audio = await RecordingHelper.convertBlobToBase64(audioData)
       const pronunciationRequest: PronunciationAssessmentRequest = {
         assessmentId: assessmentId!,
         timestamp: new Date().toISOString(),
-        duration: recordingDuration,
+        duration: duration,
         difficulty_level: prompt.difficulty_level,
-        audioBase64: base64Audio,
+        audioBase64: audioData,
         targetPhonemes: prompt.target_phonemes,
         prompt_text: prompt.prompt_text
       }
@@ -117,8 +85,11 @@ export default function PronunciationAssessmentPage() {
       router.push('/onboarding/assessment/vocabulary')
     } catch (error) {
       console.error('Failed to submit pronunciation assessment:', error)
-      setError('Failed to submit recording. Please try again.')
     }
+  }
+
+  const handleRetry = () => {
+    dispatch(resetRecording())
   }
 
   return (
@@ -147,9 +118,9 @@ export default function PronunciationAssessmentPage() {
           )}
 
           <div className="flex flex-col gap-4">
-            {recording && (
+            {isRecording && (
               <div className="text-center text-gray-600">
-                Recording: {recordingDuration}s
+                Recording: {duration}s
               </div>
             )}
             
@@ -157,10 +128,10 @@ export default function PronunciationAssessmentPage() {
               <button
                 onClick={handleRecordingToggle}
                 className={`px-4 py-2 rounded-full ${
-                  recording ? 'bg-red-500' : 'bg-blue-500'
+                  isRecording ? 'bg-red-500' : 'bg-blue-500'
                 } text-white`}
               >
-                {recording ? 'Stop Recording' : 'Start Recording'}
+                {isRecording ? 'Stop Recording' : 'Start Recording'}
               </button>
             )}
 

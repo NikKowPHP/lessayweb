@@ -3,13 +3,14 @@ import authReducer from './slices/authSlice'
 import userReducer from './slices/userSlice'
 import learningReducer from './slices/learningSlice'
 import onboardingReducer from './slices/onboardingSlice'
-
+import recordingReducer from './slices/recordingSlice'
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     user: userReducer,
     learning: learningReducer,
-    onboarding: onboardingReducer
+    onboarding: onboardingReducer,
+    recording: recordingReducer
   },
 })
 

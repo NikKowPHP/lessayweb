@@ -42,17 +42,11 @@ export interface GrammarAssessmentRequest extends BaseAssessmentRequest {
 
 export interface ComprehensionAssessmentRequest extends BaseAssessmentRequest {
   youtube_video_id: string
-  responses: {
-    questionId: string
-    answer: string
-    context_timestamp: string
-    expected_concepts: string[]
-    evaluationScores: {
-      content_relevance: number
-      language_accuracy: number
-      vocabulary_usage: number
-    }
-  }[]
+  responses: QuestionAnswer[]
+}
+export interface QuestionAnswer {
+  questionId: string;
+  answer: string;
 }
 
 export interface FinalAssessmentRequest {

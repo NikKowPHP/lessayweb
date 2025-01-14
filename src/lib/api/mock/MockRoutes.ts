@@ -62,30 +62,86 @@ export const mockRoutes: MockRoute[] = [
         status: 'success',
         data: {
           youtube_video_id: 'dQw4w9WgXcQ',
-          title: 'Daily Conversations in German',
-          description: 'Basic conversations in a café setting',
+          title: 'Ordering at a German Café',
+          description: 'Learn how to order food and drinks in a typical German café setting.',
           duration_seconds: 180,
           language_code: 'de',
           difficulty: 'A2',
+          instructions: {
+            before_video: 'You will watch a conversation in a German café. Before starting, review these key phrases: "bestellen" (to order), "Getränk" (drink), "Speisekarte" (menu).',
+            during_video: 'Focus on: 1) Greeting expressions 2) Ordering phrases 3) Numbers and prices 4) Politeness markers',
+            after_video: 'Answer each question using complete sentences. You can replay specific parts of the video up to 3 times.'
+          },
+          video_settings: {
+            can_pause: true,
+            max_replays: 3,
+            show_subtitles: true,
+            playback_speed_options: [0.75, 1, 1.25, 1.5]
+          },
+          transcript_segments: [
+            {
+              start_time: 0,
+              end_time: 5,
+              text: 'Guten Morgen! Willkommen im Café Sonne.'
+            },
+            {
+              start_time: 5,
+              end_time: 10,
+              text: 'Guten Morgen! Haben Sie eine Speisekarte?'
+            },
+            {
+              start_time: 10,
+              end_time: 15,
+              text: 'Ja, hier bitte. Möchten Sie zuerst ein Getränk?'
+            },
+            {
+              start_time: 15,
+              end_time: 20,
+              text: 'Ja, einen großen Cappuccino, bitte.'
+            },
+            {
+              start_time: 20,
+              end_time: 25,
+              text: 'Gerne. Möchten Sie auch etwas zum Frühstück?'
+            },
+            {
+              start_time: 25,
+              end_time: 30,
+              text: 'Gerne. Möchten Sie auch etwas zum Essen?'
+            }
+          ],
           questions: [
             {
               id: 'q1',
-              question: 'Describe what happened when the customer first entered the café.',
+              question: 'How did the server greet the customer? What time of day was it?',
               context_timestamp: '00:15',
+              timestamp_seconds: 15,
               difficulty: 'A2',
-              expected_concepts: ['greeting', 'politeness', 'time_of_day', 'customer_service'],
-              evaluation_criteria: {
-                content_relevance: 0.4,
-                language_accuracy: 0.3,
-                vocabulary_usage: 0.3
-              },
-              hint: 'Focus on the interaction between the customer and staff'
+              question_type: 'open_ended',
+              expected_concepts: ['morning_greeting', 'politeness'],
+              hint: 'Listen to the first greeting and think about when we use "Guten Morgen"'
+            },
+            {
+              id: 'q2',
+              question: 'What did the customer order? Include any specific details mentioned.',
+              context_timestamp: '00:20',
+              timestamp_seconds: 20,
+              difficulty: 'A2',
+              question_type: 'open_ended',
+              expected_concepts: ['beverage_order', 'politeness_marker'],
+              hint: 'Focus on the specific drink ordered and how it was requested'
+            },
+            {
+              id: 'q3',
+              question: 'What additional question did the server ask? Why is this question important?',
+              context_timestamp: '00:25',
+              timestamp_seconds: 25,
+              difficulty: 'A2',
+              question_type: 'open_ended',
+              expected_concepts: ['follow_up_question', 'upselling'],
+              hint: 'Think about what else the server offered besides drinks'
             }
-          ],
-          transcript_highlights: {
-            '00:15': 'Guten Morgen! Was kann ich für Sie tun?',
-            '00:20': 'Ich hätte gerne einen Kaffee, bitte.'
-          }
+          ]
         }
       }
     },

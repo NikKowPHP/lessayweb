@@ -14,7 +14,7 @@ export default function AssessmentIntroPage() {
   const handleStartAssessment = async () => {
     try {
       await dispatch(startAssessment(AssessmentType.Pronunciation)).unwrap()
-      router.push('/onboarding/assessment/question')
+      router.push('/onboarding/assessment/pronunciation')
     } catch (err) {
       // Error is handled by the slice
     }

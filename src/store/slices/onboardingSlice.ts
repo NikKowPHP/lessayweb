@@ -91,7 +91,43 @@ export const rehydrateState = createAsyncThunk(
     
       
     }
-    
+
+     // Check if we need to initialize prompts
+    const needsPrompts = !savedState?.prompts || 
+      Object.keys(savedState.prompts).length === 0
+
+    if (needsPrompts && languagePrefs) {
+      try {
+        console.log('Initializing prompts queue...')
+        // Initialize with pronunciation as first assessment type
+        const firstPrompt = await onboardingService.initializePromptQueue(
+          AssessmentType.Pronunciation
+        )
+        console.log('firstPrompt', firstPrompt)
+        
+        // Update the saved state with the new prompts
+        const updatedState = {
+          ...savedState,
+          prompts: {
+            [AssessmentType.Pronunciation]: firstPrompt
+          },
+          assessmentType: AssessmentType.Pronunciation
+        }
+
+        console.log('updatedState with prompts', updatedState)
+
+        // Save the updated state
+        await onboardingStorage.setSession(updatedState as OnboardingState)
+        
+        // Return the updated state
+        return {
+          onboardingState: updatedState,
+          languagePreferences: languagePrefs
+        }
+      } catch (error) {
+        console.error('Failed to initialize prompts:', error)
+      }
+    }
     return {
       onboardingState: savedState,
       languagePreferences: languagePrefs

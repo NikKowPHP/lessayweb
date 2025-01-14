@@ -81,7 +81,7 @@ export default function ComprehensionAssessmentPage() {
         responses: questionAnswers,
       }
 
-      await dispatch(submitAssessment({
+       dispatch(submitAssessment({
         type: AssessmentType.Comprehension,
         data: comprehensionRequest
       })).unwrap()

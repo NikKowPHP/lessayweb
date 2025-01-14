@@ -17,6 +17,7 @@ export default function PronunciationAssessmentPage() {
   const [audioData, setAudioData] = useState<Blob | null>(null)
   const [recordingDuration, setRecordingDuration] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
   
   const recorderRef = useRef<RecordingHelper>(new RecordingHelper())
   const timerRef = useRef<NodeJS.Timeout | null>(null)
@@ -24,21 +25,32 @@ export default function PronunciationAssessmentPage() {
   const prompt = prompts[AssessmentType.Pronunciation]
 
   useEffect(() => {
-    // Cleanup on unmount
     return () => {
+      // Cleanup on unmount
       if (timerRef.current) {
         clearInterval(timerRef.current)
       }
+      // Cleanup audio URL
+      if (audioUrl) {
+        URL.revokeObjectURL(audioUrl)
+      }
     }
-  }, [])
+  }, [audioUrl])
 
   const handleRecordingToggle = async () => {
     try {
       if (!recording) {
-        // Start recording
+        // Start new recording
         await recorderRef.current.startRecording()
         setRecording(true)
         setError(null)
+        
+        // Reset previous recording if exists
+        if (audioUrl) {
+          URL.revokeObjectURL(audioUrl)
+          setAudioUrl(null)
+        }
+        setAudioData(null)
         
         // Start duration timer
         timerRef.current = setInterval(() => {
@@ -53,6 +65,10 @@ export default function PronunciationAssessmentPage() {
         setRecordingDuration(finalDuration)
         setRecording(false)
         
+        // Create new audio URL
+        const url = URL.createObjectURL(audioBlob)
+        setAudioUrl(url)
+        
         // Clear timer
         if (timerRef.current) {
           clearInterval(timerRef.current)
@@ -63,6 +79,17 @@ export default function PronunciationAssessmentPage() {
       setError('Failed to access microphone. Please ensure microphone permissions are granted.')
       setRecording(false)
     }
+  }
+
+  const handleRetry = () => {
+    // Clean up existing recording
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl)
+      setAudioUrl(null)
+    }
+    setAudioData(null)
+    setRecordingDuration(0)
+    setError(null)
   }
 
   const handleSubmit = async () => {
@@ -126,28 +153,40 @@ export default function PronunciationAssessmentPage() {
               </div>
             )}
             
-            <button
-              onClick={handleRecordingToggle}
-              className={`px-4 py-2 rounded-full ${
-                recording ? 'bg-red-500' : 'bg-blue-500'
-              } text-white`}
-            >
-              {recording ? 'Stop Recording' : 'Start Recording'}
-            </button>
-
-            {audioData && (
-              <audio controls className="w-full">
-                <source src={URL.createObjectURL(audioData)} type="audio/webm" />
-              </audio>
+            {!audioData && (
+              <button
+                onClick={handleRecordingToggle}
+                className={`px-4 py-2 rounded-full ${
+                  recording ? 'bg-red-500' : 'bg-blue-500'
+                } text-white`}
+              >
+                {recording ? 'Stop Recording' : 'Start Recording'}
+              </button>
             )}
 
-            <button
-              onClick={handleSubmit}
-              disabled={loading || !audioData}
-              className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400"
-            >
-              {loading ? 'Submitting...' : 'Submit Recording'}
-            </button>
+            {audioData && (
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <audio controls className="flex-1">
+                    <source src={audioUrl!} type="audio/webm" />
+                  </audio>
+                  <button
+                    onClick={handleRetry}
+                    className="px-4 py-2 rounded-full bg-gray-500 text-white hover:bg-gray-600"
+                  >
+                    Retry
+                  </button>
+                </div>
+
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400"
+                >
+                  {loading ? 'Submitting...' : 'Submit Recording'}
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

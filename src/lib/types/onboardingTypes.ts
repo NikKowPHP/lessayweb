@@ -66,6 +66,12 @@ export interface OnboardingState {
   finalAssessment: FinalAssessmentResponse | null
   promptLoadStatus: Record<AssessmentType, boolean>
   languagePreferences: LanguagePreferencesState | null
+  submissionStatus: Record<AssessmentType, SubmissionStatus>
+}
+export interface SubmissionStatus {
+  type: AssessmentType;
+  status: 'pending' | 'completed' | 'failed' | null;
+  error: string | null;
 }
 
 
@@ -132,5 +138,27 @@ export const initialOnboardingState: OnboardingState = {
     [AssessmentType.Grammar]: false,
     [AssessmentType.Comprehension]: false
   },
-  languagePreferences: null
+  languagePreferences: null,
+  submissionStatus: {
+    [AssessmentType.Pronunciation]: {
+      type: AssessmentType.Pronunciation,
+      status: null,
+      error: null
+    },
+    [AssessmentType.Vocabulary]: {
+      type: AssessmentType.Vocabulary,
+      status: null,
+      error: null
+    },
+    [AssessmentType.Grammar]: {
+      type: AssessmentType.Grammar,
+      status: null,
+      error: null
+    },
+    [AssessmentType.Comprehension]: {
+      type: AssessmentType.Comprehension,
+      status: null,
+      error: null
+    }
+  }
 }

@@ -21,12 +21,13 @@ import { languagePreferencesStorage } from './languagePreferencesStorage'
 class OnboardingService {
   private api: IOnboardingApi
   private promptQueue: Map<AssessmentType, Promise<any>>
-
+  private submissionQueue: Map<string, Promise<any>>
   constructor(api?: IOnboardingApi) {
     this.api = api || (process.env.NODE_ENV === 'development' 
       ? new MockOnboardingApi()
       : OnboardingApi.getInstance())
     this.promptQueue = new Map()
+    this.submissionQueue = new Map()
   }
 
   async initializePromptQueue(firstType: AssessmentType) {
@@ -267,14 +268,32 @@ class OnboardingService {
     }
   }
 
-  async submitPronunciationAssessment(data: PronunciationAssessmentRequest) {
-    try {
-      const response = await this.api.submitPronunciationAssessment(data)
-      return response.data
-    } catch (error) {
-      throw new Error('Failed to submit pronunciation assessment')
+  async submitPronunciationAssessment(data: PronunciationAssessmentRequest, background: boolean = false) {
+    const submissionId = `pronunciation_${Date.now()}`
+    
+    const submissionPromise = (async () => {
+      try {
+        const response = await this.api.submitPronunciationAssessment(data)
+        return response.data
+      } catch (error) {
+        console.error('Background submission failed:', error)
+        throw error
+      } finally {
+        // Cleanup from queue
+        this.submissionQueue.delete(submissionId)
+      }
+    })()
+
+    if (background) {
+      // Store in queue and return immediately
+      this.submissionQueue.set(submissionId, submissionPromise)
+      return { status: 'queued', id: submissionId }
     }
+
+    // If not background, wait for completion
+    return await submissionPromise
   }
+  
 
   // Vocabulary methods
   async getVocabularyPrompt(): Promise<VocabularyPromptResponse> {
@@ -286,13 +305,26 @@ class OnboardingService {
     }
   }
 
-  async submitVocabularyAssessment(data: VocabularyAssessmentRequest) {
-    try {
-      const response = await this.api.submitVocabularyAssessment(data)
-      return response.data
-    } catch (error) {
-      throw new Error('Failed to submit vocabulary assessment')
+  async submitVocabularyAssessment(data: VocabularyAssessmentRequest, background: boolean = false) {
+    const submissionId = `vocabulary_${Date.now()}`
+    const submissionPromise = (async () => {
+      try {
+        const response = await this.api.submitVocabularyAssessment(data)
+        return response.data
+      } catch (error) {
+        console.error('Background submission failed:', error)
+        throw error
+      } finally {
+        this.submissionQueue.delete(submissionId)
+      }
+    })()
+
+    if (background) {
+      this.submissionQueue.set(submissionId, submissionPromise)
+      return { status: 'queued', id: submissionId }
     }
+
+    return await submissionPromise
   }
 
   // Grammar methods
@@ -305,13 +337,26 @@ class OnboardingService {
     }
   }
 
-  async submitGrammarAssessment(data: GrammarAssessmentRequest) {
-    try {
-      const response = await this.api.submitGrammarAssessment(data)
-      return response.data
-    } catch (error) {
-      throw new Error('Failed to submit grammar assessment')
+  async submitGrammarAssessment(data: GrammarAssessmentRequest, background: boolean = false) {
+    const submissionId = `grammar_${Date.now()}`
+    const submissionPromise = (async () => {
+      try {
+        const response = await this.api.submitGrammarAssessment(data)
+        return response.data
+      } catch (error) {
+        console.error('Background submission failed:', error)
+        throw error
+      } finally {
+        this.submissionQueue.delete(submissionId)
+      }
+    })()
+
+    if (background) {
+      this.submissionQueue.set(submissionId, submissionPromise)
+      return { status: 'queued', id: submissionId }
     }
+
+    return await submissionPromise
   }
 
   // Comprehension methods
@@ -324,12 +369,39 @@ class OnboardingService {
     }
   }
 
-  async submitComprehensionAssessment(data: ComprehensionAssessmentRequest) {
+  async submitComprehensionAssessment(data: ComprehensionAssessmentRequest, background: boolean = false) {
+    const submissionId = `comprehension_${Date.now()}`
+    const submissionPromise = (async () => {
+      try {
+        const response = await this.api.submitComprehensionAssessment(data)
+        return response.data
+      } catch (error) {
+        console.error('Background submission failed:', error)
+        throw error
+      } finally {
+        this.submissionQueue.delete(submissionId)
+      }
+    })()
+
+    if (background) {
+      this.submissionQueue.set(submissionId, submissionPromise)
+      return { status: 'queued', id: submissionId }
+    }
+
+    return await submissionPromise
+  }
+
+  // Add method to check submission status
+  async getSubmissionStatus(submissionId: string) {
+    const submission = this.submissionQueue.get(submissionId)
+    if (!submission) {
+      return { status: 'not_found' }
+    }
     try {
-      const response = await this.api.submitComprehensionAssessment(data)
-      return response.data
+      const result = await submission
+      return { status: 'completed', result }
     } catch (error) {
-      throw new Error('Failed to submit comprehension assessment')
+      return { status: 'failed', error }
     }
   }
 }

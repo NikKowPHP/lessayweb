@@ -77,7 +77,7 @@ export default function PronunciationAssessmentPage() {
         prompt_text: prompt.prompt_text
       }
   
-      await dispatch(submitAssessment({
+      dispatch(submitAssessment({
         type: AssessmentType.Pronunciation,
         data: pronunciationRequest
       })).unwrap()

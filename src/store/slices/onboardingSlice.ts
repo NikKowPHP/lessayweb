@@ -1,18 +1,16 @@
-import { createSlice, createAsyncThunk, createAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, createAction, PayloadAction } from '@reduxjs/toolkit'
 import { onboardingService } from '@/lib/services/onboardingService'
 import type { RootState } from '@/store'
 import { 
   AssessmentType, 
   OnboardingStep, 
   OnboardingState,
-  AssessmentPrompts,
-  AssessmentResponses
+  SubmissionStatus,
 } from '@/lib/types/onboardingTypes'
 import type { LanguageCode } from '@/constants/languages'
 import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
-import { LanguagePreferences } from '@/lib/models/languages/LanguagePreferencesModel'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(
@@ -45,18 +43,42 @@ export const getPrompt = createAsyncThunk(
 
 export const submitAssessment = createAsyncThunk(
   'onboarding/submitAssessment',
-  async ({ type, data }: { type: AssessmentType; data: BaseAssessmentRequest }) => {
-    switch (type) {
-      case AssessmentType.Pronunciation:
-        return await onboardingService.submitPronunciationAssessment(data as PronunciationAssessmentRequest)
-      case AssessmentType.Vocabulary:
-        return await onboardingService.submitVocabularyAssessment(data as VocabularyAssessmentRequest)
-      case AssessmentType.Grammar:
-        return await onboardingService.submitGrammarAssessment(data as GrammarAssessmentRequest)
-      case AssessmentType.Comprehension:
-        return await onboardingService.submitComprehensionAssessment(data as ComprehensionAssessmentRequest)
-      default:
-        throw new Error('Invalid assessment type')
+  async ({ type, data }: { type: AssessmentType; data: BaseAssessmentRequest }, { dispatch }) => {
+     // Immediately return to allow UI to continue
+    dispatch(setSubmissionStatus({ type, status: 'pending', error: null } ))
+    try {
+
+      let response
+      switch (type) {
+      
+        case AssessmentType.Pronunciation:
+          response = await onboardingService.submitPronunciationAssessment(data as PronunciationAssessmentRequest, true)
+          break
+        case AssessmentType.Vocabulary:
+          response = await onboardingService.submitVocabularyAssessment(data as VocabularyAssessmentRequest, true)
+          break
+        case AssessmentType.Grammar:
+          response = await onboardingService.submitGrammarAssessment(data as GrammarAssessmentRequest, true)
+          break
+        case AssessmentType.Comprehension:
+          response = await onboardingService.submitComprehensionAssessment(data as ComprehensionAssessmentRequest, true)
+          break
+        default:
+          throw new Error('Invalid assessment type')
+      }
+      dispatch(setSubmissionStatus({ type, status: 'completed', error: null }))
+      return response
+    } catch (error) {
+      dispatch(setSubmissionStatus({ type, status: 'failed', error: (error as Error).message }))
+      throw error
+    }
+  },
+  {
+    condition: (arg, { getState }) => {
+      const state = getState() as RootState
+      const currentStatus = state.onboarding.submissionStatus[arg.type]
+      // Prevent duplicate submissions
+      return !currentStatus || currentStatus.status !== 'pending'
     }
   }
 )
@@ -196,7 +218,29 @@ const initialState: OnboardingState = {
   sessionLoaded: false,
   finalAssessment: null,
   promptLoadStatus: {} as Record<AssessmentType, boolean>,
-  languagePreferences: null
+  languagePreferences: null,
+  submissionStatus: {
+    [AssessmentType.Pronunciation]: {
+      type: AssessmentType.Pronunciation,
+      status: null,
+      error: null
+    },
+    [AssessmentType.Vocabulary]: {
+      type: AssessmentType.Vocabulary,
+      status: null,
+      error: null
+    },
+    [AssessmentType.Grammar]: {
+      type: AssessmentType.Grammar,
+      status: null,
+      error: null
+    },
+    [AssessmentType.Comprehension]: {
+      type: AssessmentType.Comprehension,
+      status: null,
+      error: null
+    }
+  }
 }
 
 const onboardingSlice = createSlice({
@@ -215,6 +259,9 @@ const onboardingSlice = createSlice({
     resetOnboarding: () => initialState,
     updatePrompts: (state, action) => {
       state.prompts = action.payload
+    },
+    setSubmissionStatus: (state, action: PayloadAction<SubmissionStatus>) => {
+      state.submissionStatus[action.payload.type] = action.payload
     }
   },
   extraReducers: (builder) => {
@@ -247,6 +294,11 @@ const onboardingSlice = createSlice({
       .addCase(submitAssessment.fulfilled, (state, action) => {
         if (state.assessmentType) {
           state.responses[state.assessmentType] = action.payload
+          state.submissionStatus[state.assessmentType] = {
+            type: state.assessmentType,
+            status: 'completed',
+            error: null
+          }
         }
       })
       // Submit Final Assessment
@@ -335,7 +387,8 @@ export const {
   setAssessmentType, 
   updateAssessmentProgress, 
   resetOnboarding,
-  updatePrompts
+  updatePrompts,
+  setSubmissionStatus
 } = onboardingSlice.actions
 
 export default onboardingSlice.reducer

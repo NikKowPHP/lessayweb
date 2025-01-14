@@ -89,7 +89,7 @@ class OnboardingStorage extends AbstractStorage {
           )
       ])
 
-      console.info('Session state updated', clonedState)
+      // console.info('Session state updated', clonedState)
     } catch (error) {
       console.error('Failed to set session:', error as Error, {
         state: JSON.stringify(state, null, 2)

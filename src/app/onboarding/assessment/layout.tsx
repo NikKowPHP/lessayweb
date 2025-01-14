@@ -1,7 +1,9 @@
 'use client'
 
 import { AssessmentType } from '@/lib/types/onboardingTypes'
-import { useAppSelector } from '@/store/hooks'
+import { useAppDispatch, useAppSelector } from '@/store/hooks'
+import { rehydrateState } from '@/store/slices/onboardingSlice'
+import { useEffect } from 'react'
 
 interface AssessmentLayoutProps {
   type: AssessmentType
@@ -11,6 +13,15 @@ interface AssessmentLayoutProps {
 
 export default function AssessmentLayout({ type, children, onSubmit }: AssessmentLayoutProps) {
   const { loading, error } = useAppSelector((state) => state.onboarding)
+  const onboardingState = useAppSelector(state => state.onboarding)
+  const dispatch = useAppDispatch()
+  useEffect(() => {
+    dispatch(rehydrateState())
+  }, [dispatch])
+  useEffect(() => {
+    // dispatch(getPrompt(AssessmentType.Pronunciation))
+    console.log('onboardingState the latest', onboardingState)
+  }, [onboardingState])
 
   return (
     <div className="min-h-screen p-6 bg-gray-50">

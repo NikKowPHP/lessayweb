@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk, createAction } from '@reduxjs/toolkit'
 import { onboardingService } from '@/lib/services/onboardingService'
 import type { RootState } from '@/store'
 import { 
@@ -12,6 +12,7 @@ import type { LanguageCode } from '@/constants/languages'
 import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
+import { LanguagePreferences } from '@/lib/models/languages/LanguagePreferencesModel'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(
@@ -66,6 +67,7 @@ export const submitFinalAssessment = createAsyncThunk(
   }
 )
 
+
 // Update rehydrateState thunk
 export const rehydrateState = createAsyncThunk(
   'onboarding/rehydrate',
@@ -74,8 +76,7 @@ export const rehydrateState = createAsyncThunk(
       onboardingStorage.getSession(),
       languagePreferencesStorage.getPreferences()
     ])
-    console.debug('savedState', savedState)
-    console.debug('languagePrefs', languagePrefs)
+ 
     
     if (savedState) {
       if (savedState.currentStep) {
@@ -87,6 +88,8 @@ export const rehydrateState = createAsyncThunk(
       if (savedState.assessmentProgress) {
         dispatch(updateAssessmentProgress(savedState.assessmentProgress))
       }
+    
+      
     }
     
     return {
@@ -166,21 +169,61 @@ const onboardingSlice = createSlice({
         state.currentStep = OnboardingStep.Complete
       })
       // rehydrate state
-   .addCase(rehydrateState.fulfilled, (state, action) => {
-    if (action.payload) {
-      return {
-        ...initialState,
-        ...action.payload,
-        sessionLoaded: true,
-        isRehydrated: true,
-      }
-    }
-    return {
-      ...state,
-      sessionLoaded: true,
-      isRehydrated: true,
-    }
-  })
+      .addCase(rehydrateState.fulfilled, (state, action) => {
+        state.sessionLoaded = true;
+
+        console.log('savedState', action.payload.onboardingState)
+        console.log('saved languagePrefs', action.payload.languagePreferences)
+      
+        if (action.payload.onboardingState) {
+          const {
+            currentStep,
+            assessmentType,
+            assessmentProgress,
+            prompts,
+            responses,
+            assessmentId,
+            finalAssessment,
+            promptLoadStatus
+          } = action.payload.onboardingState;
+      
+          Object.assign(state, {
+            currentStep,
+            assessmentType,
+            assessmentProgress,
+            prompts: prompts || {},
+            responses: responses || {},
+            assessmentId,
+            finalAssessment,
+            promptLoadStatus: promptLoadStatus || {
+              [AssessmentType.Pronunciation]: false,
+              [AssessmentType.Vocabulary]: false,
+              [AssessmentType.Grammar]: false,
+              [AssessmentType.Comprehension]: false
+            }
+          });
+        }
+      
+        if (action.payload.languagePreferences) {
+          // Create a proper LanguagePreferencesState object from the simple preferences object
+          state.languagePreferences = {
+            nativeLanguage: action.payload.languagePreferences.nativeLanguage,
+            targetLanguage: action.payload.languagePreferences.targetLanguage,
+            isSubmitting: false,
+            error: null
+          };
+
+          console.log('languagePreferences state', state.languagePreferences)
+          console.log('state current', JSON.stringify(state, null, 2));
+      
+          // If we have language preferences but are still on the language step,
+          // we should move to the next step
+          if (state.currentStep === OnboardingStep.Language) {
+            state.currentStep = OnboardingStep.AssessmentIntro;
+          }
+        }
+      })
+      
       // Persist state on all successful actions
       .addMatcher(
         (action) => action.type.startsWith('onboarding/'),

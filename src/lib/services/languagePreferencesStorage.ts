@@ -35,6 +35,7 @@ class LanguagePreferencesStorage extends AbstractStorage {
     try {
       if (this.sessionCache) {
         const cached = this.sessionCache.getItem(SESSION_KEY)
+        console.info('Retrieved cached language preferences', { cached })
         if (cached) {
           return JSON.parse(cached)
         }

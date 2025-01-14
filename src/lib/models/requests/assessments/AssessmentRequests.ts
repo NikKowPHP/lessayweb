@@ -18,7 +18,8 @@ export interface VocabularyAssessmentRequest extends BaseAssessmentRequest {
   topic: string
   expectedVocabulary: string[]
   image_url: string
-  audioBase64?: string
+  audioBase64?: string | null
+  responseMode: 'text' | 'audio'
   categories?: {
     name: string
     words: string[]

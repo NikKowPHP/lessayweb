@@ -15,6 +15,8 @@ import {
 import AssessmentLayout from '../layout'
 import Image from 'next/image'
 
+type ResponseMode = 'text' | 'audio'
+
 export default function VocabularyAssessmentPage() {
   const router = useRouter()
   const dispatch = useAppDispatch()
@@ -31,6 +33,7 @@ export default function VocabularyAssessmentPage() {
   const [isImageLoading, setIsImageLoading] = useState(true)
   const [description, setDescription] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [responseMode, setResponseMode] = useState<ResponseMode>('text')
   
   const prompt = prompts[AssessmentType.Vocabulary]
 
@@ -50,8 +53,26 @@ export default function VocabularyAssessmentPage() {
     dispatch(resetRecording())
   }
 
+  const handleModeToggle = () => {
+    if (description || audioData) {
+      if (!confirm('Changing mode will clear your current response. Continue?')) {
+        return
+      }
+    }
+    
+    if (responseMode === 'audio') {
+      dispatch(resetRecording())
+    }
+    setDescription('')
+    setResponseMode(responseMode === 'text' ? 'audio' : 'text')
+  }
+
   const handleSubmit = async () => {
-    if (!description.trim() || !prompt || !audioData) {
+    const hasValidResponse = responseMode === 'text' ? 
+      description.trim().length >= 50 : 
+      !!audioData
+
+    if (!hasValidResponse || !prompt) {
       return
     }
 
@@ -61,22 +82,21 @@ export default function VocabularyAssessmentPage() {
       const vocabularyRequest: VocabularyAssessmentRequest = {
         assessmentId: assessmentId!,
         timestamp: new Date().toISOString(),
-        duration,
+        duration: responseMode === 'audio' ? duration : 0,
         difficulty_level: prompt.difficulty_level,
         topic: prompt.topic,
         image_url: prompt.image_url,
-        userResponse: [description.trim()],
+        userResponse: responseMode === 'text' ? [description.trim()] : [],
         expectedVocabulary: prompt.expected_vocabulary,
-        audioBase64: audioData
+        audioBase64: responseMode === 'audio' ? audioData : null,
+        responseMode
       }
 
-      // Dispatch submission in background
       dispatch(submitAssessment({
         type: AssessmentType.Vocabulary,
         data: vocabularyRequest
       }))
 
-      // Immediately navigate to next assessment
       router.push('/onboarding/assessment/grammar')
     } catch (error) {
       console.error('Failed to submit vocabulary assessment:', error)
@@ -157,87 +177,102 @@ export default function VocabularyAssessmentPage() {
           </div>
 
           <div className="space-y-4">
-            <div className="p-4 bg-white rounded-lg border">
-              <p className="text-sm font-medium mb-3">Record your description:</p>
-              
-              {isRecording && (
-                <div className="text-center text-gray-600 mb-3">
-                  Recording: {duration}s
-                </div>
-              )}
-              
-              {!audioData ? (
-                <button
-                  onClick={handleRecordingToggle}
-                  className={`w-full px-4 py-2 rounded-full ${
-                    isRecording ? 'bg-red-500' : 'bg-blue-500'
-                  } text-white hover:opacity-90 transition-opacity`}
-                >
-                  {isRecording ? 'Stop Recording' : 'Start Recording'}
-                </button>
-              ) : (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <audio controls className="flex-1">
-                      <source src={audioUrl!} type="audio/webm" />
-                    </audio>
-                    <button
-                      onClick={handleRetry}
-                      className="px-4 py-2 rounded-full bg-gray-500 text-white hover:bg-gray-600"
-                    >
-                      Retry
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {recordingError && (
-                <p className="mt-2 text-sm text-red-600">{recordingError}</p>
-              )}
+            <div className="flex justify-center space-x-2 p-4">
+              <button
+                onClick={() => setResponseMode('text')}
+                className={`px-4 py-2 rounded-full transition-colors ${
+                  responseMode === 'text' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Write Description
+              </button>
+              <button
+                onClick={() => setResponseMode('audio')}
+                className={`px-4 py-2 rounded-full transition-colors ${
+                  responseMode === 'audio' 
+                    ? 'bg-primary text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+              >
+                Speak Description
+              </button>
             </div>
 
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
-              rows={4}
-              placeholder="Write your description here..."
-              disabled={isSubmitting}
-            />
+            {responseMode === 'text' ? (
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-3 border rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                rows={4}
+                placeholder="Write your description here..."
+                disabled={isSubmitting}
+              />
+            ) : (
+              <div className="p-4 bg-white rounded-lg border">
+                {isRecording && (
+                  <div className="text-center text-gray-600 mb-3">
+                    Recording: {duration}s
+                  </div>
+                )}
+                
+                {!audioData ? (
+                  <button
+                    onClick={handleRecordingToggle}
+                    className={`w-full px-4 py-2 rounded-full ${
+                      isRecording ? 'bg-red-500' : 'bg-blue-500'
+                    } text-white hover:opacity-90 transition-opacity`}
+                  >
+                    {isRecording ? 'Stop Recording' : 'Start Recording'}
+                  </button>
+                ) : (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <audio controls className="flex-1">
+                        <source src={audioUrl!} type="audio/webm" />
+                      </audio>
+                      <button
+                        onClick={handleRetry}
+                        className="px-4 py-2 rounded-full bg-gray-500 text-white hover:bg-gray-600"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {recordingError && (
+                  <p className="mt-2 text-sm text-red-600">{recordingError}</p>
+                )}
+              </div>
+            )}
 
             <button
               onClick={handleSubmit}
-              disabled={!description.trim() || !audioData || isSubmitting}
+              disabled={
+                (responseMode === 'text' && !description.trim()) ||
+                (responseMode === 'audio' && !audioData) ||
+                isSubmitting
+              }
               className="w-full py-3 px-4 border border-transparent rounded-md shadow-sm text-white 
                 bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 
                 focus:ring-offset-2 focus:ring-primary disabled:bg-gray-400 
                 disabled:cursor-not-allowed transition-colors duration-200"
             >
-              {isSubmitting ? (
-                <div className="flex items-center justify-center">
-                  <div className="w-5 h-5 border-t-2 border-b-2 border-white rounded-full animate-spin mr-2"></div>
-                  Submitting...
-                </div>
-              ) : (
-                'Submit Assessment'
-              )}
+              {isSubmitting ? 'Submitting...' : 'Submit Assessment'}
             </button>
 
-            <div className="text-sm text-gray-500 space-y-1">
-              <div className="flex justify-between">
-                <span>Text description: {description.length} characters</span>
+            {responseMode === 'text' && (
+              <div className="text-sm text-gray-500">
+                Characters: {description.length}
                 {description.length < 50 && description.length > 0 && (
-                  <span className="text-yellow-600">
+                  <span className="text-yellow-600 ml-2">
                     (Minimum 50 characters recommended)
                   </span>
                 )}
               </div>
-              {!audioData && (
-                <div className="text-yellow-600">
-                  Audio recording required
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
       )}

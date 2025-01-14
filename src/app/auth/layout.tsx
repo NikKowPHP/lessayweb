@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { initializeAuth } from '@/store/slices/authSlice'
-// import { logger } from '@/lib/utils/logger'
+import { rehydrateState } from '@/store/slices/onboardingSlice'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 export default function AuthLayout({
@@ -16,37 +16,52 @@ export default function AuthLayout({
   const dispatch = useAppDispatch()
   
   const { isAuthenticated, loading: authLoading } = useAppSelector((state) => state.auth)
-  const { currentStep } = useAppSelector((state) => state.onboarding)
-  const needsOnboarding = currentStep !== 'complete'
+  const { currentStep, languagePreferences, sessionLoaded } = useAppSelector((state) => state.onboarding)
+  const onboardingState = useAppSelector(state => state.onboarding)
+  // Determine onboarding status
+  const hasLanguagePreferences = !!languagePreferences
+  const isOnboardingComplete = currentStep === 'complete'
+  const needsOnboarding = !isOnboardingComplete
 
   useEffect(() => {
-    const initAuth = async () => {
+    const initializeApp = async () => {
       try {
         await dispatch(initializeAuth()).unwrap()
+        await dispatch(rehydrateState()).unwrap()
+        console.log('rehydrated state', onboardingState)
       } catch (error) {
-        console.error('Failed to initialize auth', error as Error)
+        console.error('Failed to initialize app', error as Error)
       }
     }
 
-    initAuth()
+    initializeApp()
   }, [dispatch])
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuthenticated && sessionLoaded) {
       console.info('User is authenticated, checking onboarding status', {
-        needsOnboarding,
-        currentStep
+        hasLanguagePreferences,
+        currentStep,
+        isOnboardingComplete
       })
 
       if (needsOnboarding) {
-        router.replace('/onboarding')
+        if (hasLanguagePreferences) {
+          // If they have language preferences but haven't completed onboarding,
+          // send them to assessment intro
+          router.replace('/onboarding/assessment/intro')
+        } else {
+          // If they don't have language preferences, start from the beginning
+          router.replace('/onboarding/language')
+        }
       } else {
+        // Onboarding is complete, go to learning path
         router.replace('/learning/path')
       }
     }
-  }, [isAuthenticated, needsOnboarding, currentStep, router])
+  }, [isAuthenticated, sessionLoaded, hasLanguagePreferences, needsOnboarding, currentStep, router])
 
-  if (authLoading) {
+  if (authLoading || !sessionLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />

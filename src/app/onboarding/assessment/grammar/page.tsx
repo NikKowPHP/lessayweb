@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useAppSelector } from '@/store/hooks'
 import { AssessmentType } from '@/lib/types/onboardingTypes'
 import AssessmentLayout from '../layout'
+import AssessmentWrapper from '@/components/layout/AssessmentWrapper'
 
 export default function GrammarAssessmentPage() {
   const router = useRouter()
@@ -16,7 +17,7 @@ export default function GrammarAssessmentPage() {
   }
 
   return (
-    <AssessmentLayout type={AssessmentType.Grammar} onSubmit={handleSubmit}>
+    <AssessmentWrapper type={AssessmentType.Grammar}>
       {prompt && (
         <div className="space-y-4">
           <div className="p-4 bg-gray-50 rounded-lg">
@@ -42,6 +43,6 @@ export default function GrammarAssessmentPage() {
           />
         </div>
       )}
-    </AssessmentLayout>
+    </AssessmentWrapper>
   )
 }

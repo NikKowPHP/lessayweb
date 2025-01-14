@@ -16,6 +16,7 @@ import {
   updateDuration,
   selectRecordingState 
 } from '@/store/slices/recordingSlice'
+import AssessmentWrapper from '@/components/layout/AssessmentWrapper'
 
 export default function PronunciationAssessmentPage() {
   const router = useRouter()
@@ -93,7 +94,7 @@ export default function PronunciationAssessmentPage() {
   }
 
   return (
-    <AssessmentLayout type={AssessmentType.Pronunciation} onSubmit={handleSubmit}>
+    <AssessmentWrapper type={AssessmentType.Pronunciation} >
       {prompt && (
         <div className="space-y-4">
           <div className="p-4 bg-gray-50 rounded-lg">
@@ -161,6 +162,6 @@ export default function PronunciationAssessmentPage() {
           </div>
         </div>
       )}
-    </AssessmentLayout>
+    </AssessmentWrapper>
   )
 }

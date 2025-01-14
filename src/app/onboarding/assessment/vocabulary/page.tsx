@@ -12,10 +12,80 @@ import {
   resetRecording, 
   selectRecordingState 
 } from '@/store/slices/recordingSlice'
-import AssessmentLayout from '../layout'
+import AssessmentWrapper from '@/components/layout/AssessmentWrapper'
 import Image from 'next/image'
 
 type ResponseMode = 'text' | 'audio'
+
+const ImageWrapper = ({ 
+  imageUrl, 
+  alt, 
+  aspectRatio = 16/9  // default aspect ratio
+}: { 
+  imageUrl: string; 
+  alt: string; 
+  aspectRatio?: number;
+}) => {
+  const [isImageLoading, setIsImageLoading] = useState(true)
+  const [imageError, setImageError] = useState(false)
+
+  return (
+    <div 
+      className="relative w-full bg-gray-100 rounded-lg overflow-hidden"
+      style={{ paddingBottom: `${(1 / aspectRatio) * 100}%` }}
+    >
+      {!imageError ? (
+        <>
+          {isImageLoading && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="animate-pulse flex space-x-4">
+                <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
+              </div>
+            </div>
+          )}
+          <Image
+            src={imageUrl}
+            alt={alt}
+            fill
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+            priority
+            className={`object-contain transition-opacity duration-300 ${
+              isImageLoading ? 'opacity-0' : 'opacity-100'
+            }`}
+            onLoadingComplete={() => setIsImageLoading(false)}
+            onError={() => {
+              console.error('Failed to load image:', imageUrl)
+              setImageError(true)
+              setIsImageLoading(false)
+            }}
+          />
+        </>
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
+          <div className="text-center p-4">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
+            </svg>
+            <p className="mt-2 text-sm text-gray-500">
+              Failed to load image
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export default function VocabularyAssessmentPage() {
   const router = useRouter()
@@ -105,69 +175,25 @@ export default function VocabularyAssessmentPage() {
   }
 
   return (
-    <AssessmentLayout type={AssessmentType.Vocabulary} onSubmit={handleSubmit}>
+    <AssessmentWrapper type={AssessmentType.Vocabulary}>
       {prompt && (
-        <div className="space-y-4">
-          <div className="relative w-full h-64 bg-gray-100 rounded-lg overflow-hidden">
-            {!imageError ? (
-              <>
-                {isImageLoading && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="animate-pulse flex space-x-4">
-                      <div className="w-12 h-12 bg-gray-300 rounded-full"></div>
-                    </div>
-                  </div>
-                )}
-                <Image
-                  src={prompt.image_url}
-                  alt={prompt.topic}
-                  fill
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                  priority
-                  className={`object-cover rounded-lg transition-opacity duration-300 ${
-                    isImageLoading ? 'opacity-0' : 'opacity-100'
-                  }`}
-                  onLoadingComplete={() => setIsImageLoading(false)}
-                  onError={() => {
-                    console.error('Failed to load image:', prompt.image_url)
-                    setImageError(true)
-                    setIsImageLoading(false)
-                  }}
-                />
-              </>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-gray-200">
-                <div className="text-center p-4">
-                  <svg
-                    className="mx-auto h-12 w-12 text-gray-400"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    aria-hidden="true"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                    />
-                  </svg>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Failed to load image
-                  </p>
-                </div>
-              </div>
-            )}
+        <div className="space-y-8">
+          <div className="aspect-w-16 aspect-h-9 sm:aspect-h-7">
+            <ImageWrapper 
+              imageUrl={prompt.image_url} 
+              alt={prompt.topic}
+              aspectRatio={16/9}
+            />
           </div>
 
-          <div className="p-4 bg-gray-50 rounded-lg">
-            <p className="font-medium">Topic: {prompt.topic}</p>
+          <div className="bg-gray-50 rounded-lg p-6">
+            <h2 className="text-lg font-medium text-gray-900">Topic: {prompt.topic}</h2>
             {prompt.hints && (
-              <div className="mt-2">
-                <p className="text-sm text-gray-600">Hints:</p>
-                <ul className="list-disc list-inside">
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700">Hints:</h3>
+                <ul className="mt-2 list-disc list-inside space-y-1">
                   {prompt.hints.map((hint: string, index: number) => (
-                    <li key={index} className="text-sm text-gray-700">
+                    <li key={index} className="text-sm text-gray-600">
                       {hint}
                     </li>
                   ))}
@@ -176,7 +202,7 @@ export default function VocabularyAssessmentPage() {
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div className="flex justify-center space-x-2 p-4">
               <button
                 onClick={() => setResponseMode('text')}
@@ -276,6 +302,6 @@ export default function VocabularyAssessmentPage() {
           </div>
         </div>
       )}
-    </AssessmentLayout>
+    </AssessmentWrapper>
   )
 }

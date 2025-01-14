@@ -23,7 +23,7 @@ export const mockRoutes: MockRoute[] = [
       response: {
         status: 'success',
         data: {
-          image_url: 'https://gratisography.com/wp-content/uploads/2024/10/gratisography-cool-cat-800x525.jpg',
+          image_url: '/images/image.jpeg',
           topic: 'daily_routine',
           expected_vocabulary: ['breakfast', 'work', 'commute'],
           categories: [

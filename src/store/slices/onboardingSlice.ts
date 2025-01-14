@@ -42,6 +42,7 @@ export const getPrompt = createAsyncThunk(
   }
 )
 
+
 export const submitAssessment = createAsyncThunk(
   'onboarding/submitAssessment',
   async ({ type, data }: { type: AssessmentType; data: BaseAssessmentRequest }) => {

@@ -118,6 +118,48 @@ export const rehydrateState = createAsyncThunk(
 
         // Save the updated state
         await onboardingStorage.setSession(updatedState as OnboardingState)
+
+         // Handle background loading of other prompts
+         const handleBackgroundPrompts = async () => {
+          try {
+            const remainingTypes = [
+              AssessmentType.Vocabulary,
+              AssessmentType.Grammar,
+              AssessmentType.Comprehension
+            ]
+
+            // As each prompt loads, update the state
+            remainingTypes.forEach(type => {
+              onboardingService.getPrompt(type)
+                .then(async (prompt) => {
+                  if (prompt) {
+                    // Get current state
+                    const currentState = await onboardingStorage.getSession()
+                    // Update state with new prompt
+                    const newState = {
+                      ...currentState,
+                      prompts: {
+                        ...currentState?.prompts,
+                        [type]: prompt
+                      }
+                    }
+                    // Save updated state
+                    await onboardingStorage.setSession(newState as OnboardingState)
+                    // Dispatch action to update Redux store
+                    dispatch(updatePrompts(newState.prompts))
+                  }
+                })
+                .catch(error => {
+                  console.error(`Failed to load ${type} prompt:`, error)
+                })
+            })
+          } catch (error) {
+            console.error('Error in background prompt loading:', error)
+          }
+        }
+
+        // Start background loading without awaiting
+        handleBackgroundPrompts()
         
         // Return the updated state
         return {
@@ -126,6 +168,10 @@ export const rehydrateState = createAsyncThunk(
         }
       } catch (error) {
         console.error('Failed to initialize prompts:', error)
+        return {
+          onboardingState: savedState,
+          languagePreferences: languagePrefs
+        }
       }
     }
     return {
@@ -165,7 +211,10 @@ const onboardingSlice = createSlice({
     updateAssessmentProgress: (state, action) => {
       state.assessmentProgress = action.payload
     },
-    resetOnboarding: () => initialState
+    resetOnboarding: () => initialState,
+    updatePrompts: (state, action) => {
+      state.prompts = action.payload
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -284,7 +333,8 @@ export const {
   setCurrentStep, 
   setAssessmentType, 
   updateAssessmentProgress, 
-  resetOnboarding 
+  resetOnboarding,
+  updatePrompts
 } = onboardingSlice.actions
 
 export default onboardingSlice.reducer

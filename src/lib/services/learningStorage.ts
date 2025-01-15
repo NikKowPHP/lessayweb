@@ -105,10 +105,10 @@ export class LearningStorage extends AbstractStorage {
   async setSession(state: LearningState): Promise<void> {
     try {
       const clonedState = cloneDeep(state)
-      const serializedState = this.serializeState(clonedState)
+      const serialized = this.serializeState(clonedState)
       
       if (this.sessionCache) {
-        this.sessionCache.setItem(SESSION_KEY, serializedState)
+        this.sessionCache.setItem(SESSION_KEY, serialized)
       }
       
       await this.set(STORAGE_KEY, clonedState)

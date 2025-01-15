@@ -5,19 +5,31 @@ import {
   SkillType,
   ExerciseStatus 
 } from '@/lib/types/learningPath'
-import { learningStorage } from './learningStorage'
+import { LearningStorage, learningStorage } from './learningStorage'
 import { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
+import { LearningState } from '@/store/slices/learningSlice'
 
 export class LearningService {
   private static instance: LearningService
+  private storage: LearningStorage
 
-  private constructor() {}
+  private constructor() {
+    this.storage = learningStorage
+  }
 
   static getInstance(): LearningService {
     if (!LearningService.instance) {
       LearningService.instance = new LearningService()
     }
     return LearningService.instance
+  }
+
+  async getStoredState() {
+    return await this.storage.getSession()
+  }
+
+  async setStoredState(state: LearningState) {
+    return await this.storage.setSession(state)
   }
 
   async initializePath(path: LearningPath, assessmentResults: FinalAssessmentResponse) {
@@ -28,12 +40,8 @@ export class LearningService {
       comprehension: assessmentResults.comprehension_analysis.overall_score
     }
 
-    // Update initial skill levels in path
-    Object.entries(skillLevels).forEach(([skill, level]) => {
-      path.skills[skill as SkillType].currentLevel = level
-    })
-
-    await learningStorage.setSession({
+    // Store initial state
+    await this.storage.setSession({
       currentPath: path,
       currentExercise: null,
       currentChallenge: null,

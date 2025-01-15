@@ -9,14 +9,14 @@ import {
 import type { RootState } from '@/store'
 import { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
 import { learningService } from '@/lib/services/learningService'
+import { learningStorage } from '@/lib/services/learningStorage'
 
-interface LearningState {
+export interface LearningState {
   currentPath: LearningPath | null
   isLoading: boolean
   error: string | null
   currentExercise: Exercise | null
   currentChallenge: Challenge | null
-  skillLevels: Record<SkillType, number>
   lastActivity: string | null
   ui: {
     expandedSections: string[]
@@ -31,12 +31,6 @@ const initialState: LearningState = {
   error: null,
   currentExercise: null,
   currentChallenge: null,
-  skillLevels: {
-    pronunciation: 0,
-    grammar: 0,
-    vocabulary: 0,
-    comprehension: 0
-  },
   lastActivity: null,
   ui: {
     expandedSections: [],
@@ -66,6 +60,27 @@ export const completeExercise = createAsyncThunk(
   }
 )
 
+export const rehydrateLearningState = createAsyncThunk(
+  'learning/rehydrate',
+  async (_, { rejectWithValue }) => {
+    try {
+      const session = await learningStorage.getSession()
+      if (!session) return null
+      return session
+    } catch (error) {
+      return rejectWithValue(error instanceof Error ? error.message : 'Failed to rehydrate learning state')
+    }
+  }
+)
+
+// Add persistLearningState middleware
+const persistLearningState = (state: LearningState) => {
+  // Don't block the reducer, handle persistence separately
+  learningStorage.setSession(state).catch(error => {
+    console.error('Failed to persist learning state:', error)
+  })
+}
+
 const learningSlice = createSlice({
   name: 'learning',
   initialState,
@@ -87,17 +102,20 @@ const learningSlice = createSlice({
     },
 
     updateSkillLevels: (state, action: PayloadAction<Record<SkillType, number>>) => {
-      state.skillLevels = { ...state.skillLevels, ...action.payload }
-      
-      // Update path progress if exists
-      if (state.currentPath) {
-        Object.entries(action.payload).forEach(([skill, level]) => {
-          const skillType = skill as SkillType
-          if (state.currentPath?.skills[skillType]) {
-            state.currentPath.skills[skillType].currentLevel = level
-          }
-        })
-      }
+      if (!state.currentPath) return
+
+      // Update skills in the learning path
+      Object.entries(action.payload).forEach(([skill, level]) => {
+        const skillType = skill as SkillType
+        if (state.currentPath?.skills[skillType]) {
+          state.currentPath.skills[skillType].currentLevel = level
+          // Optionally update progress
+          state.currentPath.skills[skillType].progress = 
+            (level / state.currentPath.skills[skillType].targetLevel) * 100
+        }
+      })
+
+      state.lastActivity = new Date().toISOString()
     },
 
     unlockNextNodes: (state, action: PayloadAction<string[]>) => {
@@ -167,7 +185,6 @@ const learningSlice = createSlice({
       })
       .addCase(initializeLearningPath.fulfilled, (state, action) => {
         state.currentPath = action.payload.path
-        state.skillLevels = action.payload.skillLevels
         state.lastActivity = new Date().toISOString()
         state.isLoading = false
       })
@@ -175,13 +192,52 @@ const learningSlice = createSlice({
         state.isLoading = false
         state.error = action.error.message || 'Failed to initialize learning path'
       })
+      .addCase(rehydrateLearningState.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(rehydrateLearningState.fulfilled, (state, action) => {
+        if (action.payload) {
+          console.log('rehydrate state', action.payload)  
+          state.currentPath = action.payload.currentPath
+          state.currentExercise = action.payload.currentExercise
+          state.currentChallenge = action.payload.currentChallenge
+          state.lastActivity = action.payload.lastActivity
+          state.ui = action.payload.ui
+        }
+        state.isLoading = false
+      })
+      .addCase(rehydrateLearningState.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+      // Add persistence matcher
+      .addMatcher(
+        (action: { type: string }) => action.type.startsWith('learning/'),
+        (state, action) => {
+          // Don't persist during rehydration
+          if (!action.type.includes('rehydrate')) {
+            persistLearningState(state)
+          }
+          return state
+        }
+      )
   }
 })
 
 // Selectors
 export const selectCurrentPath = (state: RootState) => state.learning.currentPath
 export const selectCurrentExercise = (state: RootState) => state.learning.currentExercise
-export const selectSkillLevels = (state: RootState) => state.learning.skillLevels
+export const selectSkillLevels = (state: RootState) => 
+  state.learning.currentPath ? Object.fromEntries(
+    Object.entries(state.learning.currentPath.skills)
+      .map(([skill, data]) => [skill, data.currentLevel])
+  ) : {
+    pronunciation: 0,
+    grammar: 0,
+    vocabulary: 0,
+    comprehension: 0
+  }
 export const selectUIState = (state: RootState) => state.learning.ui
 export const selectIsLoading = (state: RootState) => state.learning.isLoading
 export const selectError = (state: RootState) => state.learning.error

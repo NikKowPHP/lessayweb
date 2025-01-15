@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback } from 'react'
+import { useCallback, useEffect } from 'react'
 import ReactFlow, { 
   Background,
   Controls,
@@ -16,7 +16,8 @@ import {
   selectCurrentPath, 
   selectSkillLevels,
   selectIsLoading,
-  setCurrentExercise 
+  setCurrentExercise,
+  rehydrateLearningState
 } from '@/store/slices/learningSlice'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
@@ -32,6 +33,10 @@ function LearningPath() {
   const currentPath = useAppSelector(selectCurrentPath)
   const skillLevels = useAppSelector(selectSkillLevels)
   const isLoading = useAppSelector(selectIsLoading)
+
+  useEffect(() => {
+    dispatch(rehydrateLearningState())
+  }, [dispatch])
 
   const handleNodeClick = useCallback((_ : any, node: Node) => {
     if (node.data?.exercise) {
@@ -62,6 +67,7 @@ function LearningPath() {
   const { nodes, edges } = generatePathElements(currentPath)
 
   return (
+    
     <motion.div 
       className="mt-22 h-[800px] w-full"
       initial={{ opacity: 0 }}

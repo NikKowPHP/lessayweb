@@ -3,15 +3,16 @@ import {
   SpeakerWaveIcon, 
   BookOpenIcon,
   PencilIcon,
-  MusicalNoteIcon,
+  AcademicCapIcon 
 } from '@heroicons/react/24/outline'
+import { BadgeProps } from '@/components/ui/Badge'
 
-export function getSkillColor(skill: SkillType): string {
-  const colors = {
+export function getSkillColor(skill: SkillType): BadgeProps['color'] {
+  const colors: Record<SkillType, BadgeProps['color']> = {
     pronunciation: 'blue',
     grammar: 'green',
     vocabulary: 'purple',
-    comprehension: 'orange'
+    comprehension: 'yellow'
   }
   return colors[skill]
 }
@@ -21,9 +22,7 @@ export function getSkillIcon(skill: SkillType) {
     pronunciation: SpeakerWaveIcon,
     grammar: PencilIcon,
     vocabulary: BookOpenIcon,
-    comprehension: MusicalNoteIcon
+    comprehension: AcademicCapIcon
   }
   return icons[skill]
-
-  
 }

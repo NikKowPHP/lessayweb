@@ -8,6 +8,7 @@ import {
 } from '@/lib/types/learningPath'
 import type { RootState } from '@/store'
 import { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
+import { learningService } from '@/lib/services/learningService'
 
 interface LearningState {
   currentPath: LearningPath | null
@@ -54,20 +55,14 @@ export const initializeLearningPath = createAsyncThunk(
   'learning/initializePath',
   async (payload: SetLearningPathWithResultsPayload) => {
     const { path, assessmentResults } = payload
-    
-    // Initialize skill levels from assessment
-    const skillLevels = {
-      pronunciation: assessmentResults.pronunciation_analysis.overall_score,
-      grammar: assessmentResults.grammar_analysis.overall_score,
-      vocabulary: assessmentResults.vocabulary_analysis.overall_score,
-      comprehension: assessmentResults.comprehension_analysis.overall_score
-    }
+    return await learningService.initializePath(path, assessmentResults)
+  }
+)
 
-    return {
-      path,
-      skillLevels,
-      timestamp: new Date().toISOString()
-    }
+export const completeExercise = createAsyncThunk(
+  'learning/completeExercise',
+  async ({ exerciseId, metrics }: { exerciseId: string, metrics: Exercise['metrics'] }) => {
+    return await learningService.completeExercise(exerciseId, metrics)
   }
 )
 
@@ -76,6 +71,11 @@ const learningSlice = createSlice({
   initialState,
   reducers: {
     setCurrentExercise: (state, action: PayloadAction<Exercise>) => {
+      state.currentExercise = action.payload
+      state.ui.lastViewedExercise = action.payload.id
+      state.lastActivity = new Date().toISOString()
+    },
+    completeExercise: (state, action: PayloadAction<Exercise>) => {
       state.currentExercise = action.payload
       state.ui.lastViewedExercise = action.payload.id
       state.lastActivity = new Date().toISOString()
@@ -98,46 +98,6 @@ const learningSlice = createSlice({
           }
         })
       }
-    },
-
-    completeExercise: (state, action: PayloadAction<{ 
-      exerciseId: string
-      metrics: Exercise['metrics'] 
-    }>) => {
-      if (!state.currentPath) return
-
-      const node = state.currentPath.progression.nodes[action.payload.exerciseId]
-      if (!node || node.type !== 'exercise') return
-
-      // Update exercise completion
-      const exercise = node.data as Exercise
-      exercise.status = 'completed'
-      exercise.metrics = action.payload.metrics
-
-      // Update node status
-      node.completed = true
-
-      // Update progress tracking
-      state.currentPath.progress.exercises.completed++
-      state.currentPath.progress.exercises.recent.push(action.payload.exerciseId)
-      
-      // Update overall progress
-      state.currentPath.progress.overall = 
-        (state.currentPath.progress.exercises.completed / state.currentPath.progress.exercises.total)
-
-      // Update skill progress
-      if (exercise.type) {
-        const skillType = exercise.type
-        const criticalExercisesOfType = state.currentPath.exercises.critical
-          .filter(e => e.type === skillType)
-        
-        if (criticalExercisesOfType.length > 0) {
-          state.currentPath.progress.bySkill[skillType] += 
-            (1 / criticalExercisesOfType.length)
-        }
-      }
-
-      state.lastActivity = new Date().toISOString()
     },
 
     unlockNextNodes: (state, action: PayloadAction<string[]>) => {
@@ -208,7 +168,7 @@ const learningSlice = createSlice({
       .addCase(initializeLearningPath.fulfilled, (state, action) => {
         state.currentPath = action.payload.path
         state.skillLevels = action.payload.skillLevels
-        state.lastActivity = action.payload.timestamp
+        state.lastActivity = new Date().toISOString()
         state.isLoading = false
       })
       .addCase(initializeLearningPath.rejected, (state, action) => {
@@ -230,7 +190,6 @@ export const {
   setCurrentExercise,
   setCurrentChallenge,
   updateSkillLevels,
-  completeExercise,
   unlockNextNodes,
   toggleSectionExpanded,
   toggleExerciseBookmark

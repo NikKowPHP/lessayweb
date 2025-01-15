@@ -61,22 +61,25 @@ export interface LearningPathNode {
   }
 }
 
-export interface LearningPath {
-  userId: string
-  targetLanguage: string
-  currentLevel: DifficultyLevel
-  targetLevel: DifficultyLevel
-  skills: Record<SkillType, Skill>
-  criticalExercises: Exercise[]
-  upcomingChallenges: Challenge[]
-  nodes: Record<string, LearningPathNode>
-  currentNodeId: string
+export interface SkillProgress {
+  currentLevel: number
+  targetLevel: number
+  criticalPoints: string[]
+  recentProgress?: number // For progress visualization
+  nextMilestone?: {
+    target: number
+    description: string
+  }
+}
+
+export interface LearningPathMetrics {
   progress: {
     overallProgress: number
     skillProgress: Record<SkillType, number>
     completedExercises: number
     totalExercises: number
     streakDays: number
+    lastActivity?: string // For engagement tracking
   }
   assessmentMetrics: {
     lastAssessmentDate: string
@@ -90,4 +93,83 @@ export interface LearningPath {
       targetLevel: number
     }>
   }
+}
+
+export interface LearningPath {
+  id: string
+  userId: string
+  targetLanguage: string
+  currentLevel: DifficultyLevel
+  targetLevel: DifficultyLevel
+  
+  // Skills section - Keep this flat and simple
+  skills: Record<SkillType, {
+    currentLevel: number
+    targetLevel: number
+    criticalPoints: string[]
+    progress?: number // For UI progress tracking
+  }>
+  
+  // Learning content - Organized by sections
+  exercises: {
+    critical: Exercise[]
+    recommended: Exercise[]
+    practice: Exercise[]
+  }
+  
+  challenges: {
+    current: Challenge[]
+    upcoming: Challenge[]
+  }
+  
+  // Navigation
+  progression: {
+    currentNodeId: string
+    availableNodeIds: string[]
+    nodes: Record<string, LearningPathNode>
+    dependencies: Record<string, string[]> // For quick dependency lookups
+  }
+  
+  // Progress tracking
+  progress: {
+    overall: number
+    bySkill: Record<SkillType, number>
+    exercises: {
+      completed: number
+      total: number
+      recent: string[] // Recently completed exercise IDs
+    }
+    streak: {
+      current: number
+      lastActivity: string
+      bestStreak: number
+    }
+  }
+
+  // UI-specific data
+  ui?: {
+    lastViewedExercise?: string
+    expandedSections?: string[]
+    bookmarkedExercises?: string[]
+  }
+}
+
+
+
+export interface LearningPathUI extends LearningPath {
+  // UI-specific helpers
+  getNextExercise(): Exercise
+  getProgressForSkill(skill: SkillType): number
+  getAvailableExercises(): Exercise[]
+  getRecommendedPath(): string[]
+  
+  // Progress tracking
+  trackProgress(exerciseId: string, result: ExerciseResult): void
+  updateSkillLevels(updates: Partial<Record<SkillType, number>>): void
+}
+
+export interface ExerciseResult {
+  exerciseId: string
+  result: 'correct' | 'incorrect'
+  feedback?: string
 }

@@ -18,7 +18,7 @@ import type {
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
 import { LanguagePreferenceRequest, LanguagePreferences, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
-import type { LearningPath } from '@/lib/types/learningPath'
+import type {  LearningPath } from '@/lib/types/learningPath'
 
 
 
@@ -65,5 +65,5 @@ export interface IOnboardingApi {
   createLearningPath(params: {
     assessmentId: string
     languagePreferences: LanguagePreferences
-  }): Promise<LearningPath>
+  }): Promise<{ data: LearningPath }>
 } 

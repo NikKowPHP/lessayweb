@@ -148,12 +148,12 @@ export class OnboardingApi extends Api implements IOnboardingApi {
   async createLearningPath(params: {
     assessmentId: string
     languagePreferences: LanguagePreferences
-  }): Promise<LearningPath> {
+  }): Promise<{ data: LearningPath }> {
     const response = await this.post<LearningPath>(
       OnboardingApi.ENDPOINTS.CREATE_LEARNING_PATH,
       params
     )
-    return response
+    return {data: response}
   } 
 }
 

@@ -22,7 +22,8 @@ import {
 } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
-import { setLearningPathWithResults } from './learningSlice'
+import type { LearningPath } from '@/lib/types/learningPath'
+import { initializeLearningPath } from '../slices/learningSlice'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(
@@ -130,43 +131,35 @@ export const completeAssessmentAndCreatePath = createAsyncThunk(
   'onboarding/completeAssessmentAndCreatePath',
   async (_, { dispatch, getState }) => {
     const state = getState() as RootState
-    const { finalAssessment, languagePreferences, assessmentId } =
-      state.onboarding
+    const { finalAssessment, languagePreferences } = state.onboarding
 
-    let results = finalAssessment
-
-    if (!results && assessmentId) {
-      // Get final assessment only if we have an assessmentId and no results yet
-      const assessmentResults = await onboardingService.submitFinalAssessment(
-        assessmentId
-      )
-      results = assessmentResults
-      // Update the state with final assessment results
-      dispatch({
-        type: 'onboarding/completeAssessment/fulfilled',
-        payload: assessmentResults,
-      })
-    }
-
-    if (!results || !languagePreferences) {
+    if (!finalAssessment || !languagePreferences) {
       throw new Error('Missing assessment results or language preferences')
     }
 
-    // Create learning path
-    const response = await onboardingService.createLearningPath({
-      assessmentId: results.assessment_id,
-      languagePreferences: languagePreferences,
-    })
-
-    // Dispatch actions to update learning state
-    await dispatch(
-      setLearningPathWithResults({
-        path: response,
-        assessmentResults: results,
+    try {
+      // Create learning path
+      const learningPath = await onboardingService.createLearningPath({
+        assessmentId: finalAssessment.assessment_id,
+        languagePreferences,
       })
-    )
 
-    return response
+      // Initialize learning path in learning slice
+      await dispatch(initializeLearningPath({
+        path: learningPath,
+        assessmentResults: finalAssessment
+      }))
+
+      // Update onboarding state
+      state.onboarding.currentStep = OnboardingStep.Complete
+
+      return {
+        success: true
+      }
+    } catch (error) {
+      console.error('Failed to create learning path:', error)
+      throw error
+    }
   }
 )
 
@@ -485,10 +478,7 @@ const onboardingSlice = createSlice({
         state.loading = true
         state.error = null
       })
-      .addCase(completeAssessmentAndCreatePath.fulfilled, (state) => {
-        state.loading = false
-        state.currentStep = OnboardingStep.Complete
-      })
+     
       .addCase(completeAssessmentAndCreatePath.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || 'Failed to create learning path'
@@ -531,7 +521,6 @@ export const selectAssessmentProgress = (state: RootState) =>
   state.onboarding.assessmentProgress
 export const selectPrompts = (state: RootState) => state.onboarding.prompts
 export const selectResponses = (state: RootState) => state.onboarding.responses
-
 export const {
   setCurrentStep,
   setAssessmentType,

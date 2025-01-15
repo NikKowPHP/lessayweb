@@ -16,6 +16,7 @@ import { AssessmentType } from '../types/onboardingTypes'
 // import { logger } from '../utils/logger'
 import { languagePreferencesStorage } from './languagePreferencesStorage'
 import { OnboardingStorage, onboardingStorage } from './onboardingStorage'
+import { LearningPath } from '../types/learningPath'
 
 
 class OnboardingService {
@@ -450,10 +451,11 @@ class OnboardingService {
   async createLearningPath(params: {
     assessmentId: string
     languagePreferences: LanguagePreferences
-  }) {
+  }): Promise<LearningPath> {
     try {
       const response = await this.api.createLearningPath(params)
-      return response
+      console.log('createLearningPath response', response.data)
+      return response.data
     } catch (error) {
       throw new Error('Failed to create learning path')
     }

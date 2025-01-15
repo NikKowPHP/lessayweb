@@ -147,6 +147,10 @@ export class MockOnboardingApi implements IOnboardingApi {
     return this.handleMockRequest('/learning-path/create', 'POST', params)
   }
 
+  async getLearningPath(params: any) {
+    return this.handleMockRequest('/learning-path/get', 'GET', params)
+  }
+
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms))
   }

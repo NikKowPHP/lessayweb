@@ -1,5 +1,13 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { LearningPath, Exercise, Challenge, SkillType } from '@/lib/types/learningPath'
+import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit'
+import { 
+  LearningPath, 
+  Exercise, 
+  Challenge, 
+  SkillType,
+  ExerciseStatus,
+} from '@/lib/types/learningPath'
+import type { RootState } from '@/store'
+import { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
 
 interface LearningState {
   currentPath: LearningPath | null
@@ -8,6 +16,12 @@ interface LearningState {
   currentExercise: Exercise | null
   currentChallenge: Challenge | null
   skillLevels: Record<SkillType, number>
+  lastActivity: string | null
+  ui: {
+    expandedSections: string[]
+    bookmarkedExercises: string[]
+    lastViewedExercise: string | null
+  }
 }
 
 const initialState: LearningState = {
@@ -21,86 +35,205 @@ const initialState: LearningState = {
     grammar: 0,
     vocabulary: 0,
     comprehension: 0
+  },
+  lastActivity: null,
+  ui: {
+    expandedSections: [],
+    bookmarkedExercises: [],
+    lastViewedExercise: null
   }
 }
 
 interface SetLearningPathWithResultsPayload {
   path: LearningPath
-  assessmentResults: any // Replace with proper assessment type
+  assessmentResults: FinalAssessmentResponse
 }
+
+// Async thunks
+export const initializeLearningPath = createAsyncThunk(
+  'learning/initializePath',
+  async (payload: SetLearningPathWithResultsPayload) => {
+    const { path, assessmentResults } = payload
+    
+    // Initialize skill levels from assessment
+    const skillLevels = {
+      pronunciation: assessmentResults.pronunciation_analysis.overall_score,
+      grammar: assessmentResults.grammar_analysis.overall_score,
+      vocabulary: assessmentResults.vocabulary_analysis.overall_score,
+      comprehension: assessmentResults.comprehension_analysis.overall_score
+    }
+
+    return {
+      path,
+      skillLevels,
+      timestamp: new Date().toISOString()
+    }
+  }
+)
 
 const learningSlice = createSlice({
   name: 'learning',
   initialState,
   reducers: {
-    setLearningPath: (state, action: PayloadAction<LearningPath>) => {
-      state.currentPath = action.payload
-    },
     setCurrentExercise: (state, action: PayloadAction<Exercise>) => {
       state.currentExercise = action.payload
+      state.ui.lastViewedExercise = action.payload.id
+      state.lastActivity = new Date().toISOString()
     },
+
     setCurrentChallenge: (state, action: PayloadAction<Challenge>) => {
       state.currentChallenge = action.payload
+      state.lastActivity = new Date().toISOString()
     },
+
     updateSkillLevels: (state, action: PayloadAction<Record<SkillType, number>>) => {
       state.skillLevels = { ...state.skillLevels, ...action.payload }
-    },
-    completeExercise: (state, action: PayloadAction<{ exerciseId: string; metrics: Exercise['metrics'] }>) => {
+      
+      // Update path progress if exists
       if (state.currentPath) {
-        const node = state.currentPath.nodes[action.payload.exerciseId]
-        if (node && node.type === 'exercise') {
-          node.completed = true;
-          (node.data as Exercise).metrics = action.payload.metrics
-          
-          // Update progress
-          state.currentPath.progress.completedExercises++
-          state.currentPath.progress.overallProgress = 
-            (state.currentPath.progress.completedExercises / state.currentPath.progress.totalExercises) * 100
-        }
-      }
-    },
-    unlockNextNodes: (state, action: PayloadAction<string[]>) => {
-      if (state.currentPath) {
-        action.payload.forEach(nodeId => {
-          const node = state.currentPath!.nodes[nodeId]
-          if (node) {
-            const allPrerequisitesMet = node.unlockCriteria.requiredNodes
-              .every(reqId => state.currentPath!.nodes[reqId]?.completed)
-            if (allPrerequisitesMet) {
-              if (node.type === 'exercise') {
-                (node.data as Exercise).status = 'available'
-              } else {
-                (node.data as Challenge).status = 'available'
-              }
-            }
+        Object.entries(action.payload).forEach(([skill, level]) => {
+          const skillType = skill as SkillType
+          if (state.currentPath?.skills[skillType]) {
+            state.currentPath.skills[skillType].currentLevel = level
           }
         })
       }
     },
-    setLearningPathWithResults: (state, action: PayloadAction<SetLearningPathWithResultsPayload>) => {
-      const { path, assessmentResults } = action.payload
-      state.currentPath = path
-      state.skillLevels = {
-        pronunciation: assessmentResults.skill_breakdown.pronunciation || 0,
-        grammar: assessmentResults.skill_breakdown.grammar || 0,
-        vocabulary: assessmentResults.skill_breakdown.vocabulary || 0,
-        comprehension: assessmentResults.skill_breakdown.comprehension || 0
+
+    completeExercise: (state, action: PayloadAction<{ 
+      exerciseId: string
+      metrics: Exercise['metrics'] 
+    }>) => {
+      if (!state.currentPath) return
+
+      const node = state.currentPath.progression.nodes[action.payload.exerciseId]
+      if (!node || node.type !== 'exercise') return
+
+      // Update exercise completion
+      const exercise = node.data as Exercise
+      exercise.status = 'completed'
+      exercise.metrics = action.payload.metrics
+
+      // Update node status
+      node.completed = true
+
+      // Update progress tracking
+      state.currentPath.progress.exercises.completed++
+      state.currentPath.progress.exercises.recent.push(action.payload.exerciseId)
+      
+      // Update overall progress
+      state.currentPath.progress.overall = 
+        (state.currentPath.progress.exercises.completed / state.currentPath.progress.exercises.total)
+
+      // Update skill progress
+      if (exercise.type) {
+        const skillType = exercise.type
+        const criticalExercisesOfType = state.currentPath.exercises.critical
+          .filter(e => e.type === skillType)
+        
+        if (criticalExercisesOfType.length > 0) {
+          state.currentPath.progress.bySkill[skillType] += 
+            (1 / criticalExercisesOfType.length)
+        }
       }
-      state.isLoading = false
-      state.error = null
+
+      state.lastActivity = new Date().toISOString()
+    },
+
+    unlockNextNodes: (state, action: PayloadAction<string[]>) => {
+      if (!state.currentPath) return
+
+      action.payload.forEach((nodeId: string) => {
+        const node = state.currentPath?.progression.nodes[nodeId]
+        if (!node) return
+
+        const allPrerequisitesMet = node.unlockCriteria.requiredNodes
+          .every((reqId: string) => {
+            const prerequisiteNode = state.currentPath?.progression.nodes[reqId]
+            return prerequisiteNode?.completed === true
+          })
+
+        if (allPrerequisitesMet) {
+          if (node.type === 'exercise') {
+            (node.data as Exercise).status = 'available'
+          } else {
+            (node.data as Challenge).status = 'available'
+          }
+        }
+      })
+
+      // Update available node IDs
+      if (state.currentPath) {
+        const newAvailableNodes = Object.entries(state.currentPath.progression.nodes)
+          .filter(([_, node]) => {
+            if (node.type === 'exercise') {
+              return (node.data as Exercise).status === 'available'
+            } else {
+              return (node.data as Challenge).status === 'available'
+            }
+          })
+          .map(([id]) => id)
+
+        state.currentPath.progression.availableNodeIds = newAvailableNodes
+      }
+    },
+
+    // UI actions
+    toggleSectionExpanded: (state, action: PayloadAction<string>) => {
+      const sectionId = action.payload
+      const index = state.ui.expandedSections.indexOf(sectionId)
+      if (index === -1) {
+        state.ui.expandedSections.push(sectionId)
+      } else {
+        state.ui.expandedSections.splice(index, 1)
+      }
+    },
+
+    toggleExerciseBookmark: (state, action: PayloadAction<string>) => {
+      const exerciseId = action.payload
+      const index = state.ui.bookmarkedExercises.indexOf(exerciseId)
+      if (index === -1) {
+        state.ui.bookmarkedExercises.push(exerciseId)
+      } else {
+        state.ui.bookmarkedExercises.splice(index, 1)
+      }
     }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(initializeLearningPath.pending, (state) => {
+        state.isLoading = true
+        state.error = null
+      })
+      .addCase(initializeLearningPath.fulfilled, (state, action) => {
+        state.currentPath = action.payload.path
+        state.skillLevels = action.payload.skillLevels
+        state.lastActivity = action.payload.timestamp
+        state.isLoading = false
+      })
+      .addCase(initializeLearningPath.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.error.message || 'Failed to initialize learning path'
+      })
   }
 })
 
-export const { 
-  setLearningPath, 
-  setCurrentExercise, 
+// Selectors
+export const selectCurrentPath = (state: RootState) => state.learning.currentPath
+export const selectCurrentExercise = (state: RootState) => state.learning.currentExercise
+export const selectSkillLevels = (state: RootState) => state.learning.skillLevels
+export const selectUIState = (state: RootState) => state.learning.ui
+export const selectIsLoading = (state: RootState) => state.learning.isLoading
+export const selectError = (state: RootState) => state.learning.error
+
+export const {
+  setCurrentExercise,
   setCurrentChallenge,
   updateSkillLevels,
   completeExercise,
-  
   unlockNextNodes,
-  setLearningPathWithResults
+  toggleSectionExpanded,
+  toggleExerciseBookmark
 } = learningSlice.actions
 
 export default learningSlice.reducer

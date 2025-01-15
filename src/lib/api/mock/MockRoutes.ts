@@ -1,3 +1,5 @@
+import { LearningPath } from "@/lib/types/learningPath"
+
 export interface MockRoute {
     path: string
     method: 'GET' | 'POST'
@@ -504,97 +506,254 @@ export const mockRoutes: MockRoute[] = [
           targetLanguage: 'de',
           currentLevel: 'B1',
           targetLevel: 'B2',
+          
+          // Complete skills structure
           skills: {
             pronunciation: {
-              type: 'pronunciation',
               currentLevel: 0.65,
               targetLevel: 0.85,
-              criticalPoints: ['th_sounds', 'intonation']
+              criticalPoints: ['th_sounds', 'intonation', 'stress_patterns'],
+              progress: 0.45
             },
             grammar: {
-              type: 'grammar',
-              currentLevel: 0.75,
+              currentLevel: 0.70,
               targetLevel: 0.85,
-              criticalPoints: ['past_tense', 'conditionals']
+              criticalPoints: ['past_tense', 'conditionals', 'modal_verbs'],
+              progress: 0.55
             },
             vocabulary: {
-              type: 'vocabulary',
-              currentLevel: 0.70,
-              targetLevel: 0.80,
-              criticalPoints: ['professional_context', 'academic_terms']
+              currentLevel: 0.75,
+              targetLevel: 0.90,
+              criticalPoints: ['business_terms', 'academic_vocabulary', 'idioms'],
+              progress: 0.60
             },
             comprehension: {
-              type: 'comprehension',
-              currentLevel: 0.72,
-              targetLevel: 0.82,
-              criticalPoints: ['cultural_context', 'idiomatic_expressions']
+              currentLevel: 0.68,
+              targetLevel: 0.88,
+              criticalPoints: ['native_speech', 'regional_accents', 'rapid_speech'],
+              progress: 0.50
             }
           },
-          criticalExercises: [
-            {
-              id: 'ex_1',
-              title: 'Master TH Sounds',
-              description: 'Focus on improving th sound pronunciation',
-              type: 'pronunciation',
-              difficulty: 'B1',
-              status: 'available',
-              estimatedDuration: '20min',
-              focusAreas: ['th_sounds', 'phoneme_practice'],
-              prerequisites: [],
-              completionCriteria: {
-                minAccuracy: 0.8,
-                requiredAttempts: 5
-              }
-            },
-            // ... more exercises
-          ],
-          upcomingChallenges: [
-            {
-              id: 'ch_1',
-              title: 'Real-world Conversation',
-              type: 'critical',
-              difficulty: 'B1',
-              status: 'locked',
-              unlockCriteria: {
-                requiredExercises: ['ex_1', 'ex_2'],
-                minSkillLevels: {
-                  pronunciation: 0.75
+
+          // Organized exercises by category
+          exercises: {
+            critical: [
+              {
+                id: 'ex_1',
+                title: 'Master TH Sounds',
+                description: 'Focus on improving th sound pronunciation with native speaker examples',
+                type: 'pronunciation',
+                difficulty: 'B1',
+                status: 'available',
+                duration: '20min',
+                focusAreas: ['th_sounds', 'phoneme_practice'],
+                prerequisites: [],
+                completion: {
+                  required: { accuracy: 0.8, attempts: 5 },
+                  current: { accuracy: 0, attempts: 0 }
+                },
+                uiData: {
+                  icon: 'pronunciation-exercise',
+                  color: 'blue',
+                  progressIndicator: 'circular'
+                }
+              },
+              {
+                id: 'ex_2',
+                title: 'Past Perfect Practice',
+                description: 'Master the past perfect tense through real-world scenarios',
+                type: 'grammar',
+                difficulty: 'B1',
+                status: 'locked',
+                duration: '25min',
+                focusAreas: ['past_tense', 'time_expressions'],
+                prerequisites: ['ex_1'],
+                completion: {
+                  required: { accuracy: 0.75, attempts: 3 },
+                  current: { accuracy: 0, attempts: 0 }
+                },
+                uiData: {
+                  icon: 'grammar-exercise',
+                  color: 'green',
+                  progressIndicator: 'linear'
                 }
               }
-            }
-          ],
-          nodes: {
-            'ex_1': {
-              id: 'ex_1',
-              type: 'exercise',
-              status: 'available',
-              data: {/* exercise data */},
-              unlockCriteria: {
-                requiredNodes: []
+            ],
+            recommended: [
+              {
+                id: 'ex_3',
+                title: 'Business Vocabulary Builder',
+                description: 'Essential vocabulary for professional settings',
+                type: 'vocabulary',
+                difficulty: 'B1',
+                status: 'available',
+                duration: '15min',
+                focusAreas: ['business_terms', 'formal_language'],
+                prerequisites: [],
+                completion: {
+                  required: { accuracy: 0.7, attempts: 4 },
+                  current: { accuracy: 0, attempts: 0 }
+                },
+                uiData: {
+                  icon: 'vocabulary-exercise',
+                  color: 'purple',
+                  progressIndicator: 'circular'
+                }
+              }
+            ],
+            practice: [
+              {
+                id: 'ex_4',
+                title: 'Listening Comprehension',
+                description: 'Practice understanding native speakers in various contexts',
+                type: 'comprehension',
+                difficulty: 'B1',
+                status: 'available',
+                duration: '30min',
+                focusAreas: ['native_speech', 'context_understanding'],
+                prerequisites: [],
+                completion: {
+                  required: { accuracy: 0.65, attempts: 2 },
+                  current: { accuracy: 0, attempts: 0 }
+                },
+                uiData: {
+                  icon: 'listening-exercise',
+                  color: 'orange',
+                  progressIndicator: 'linear'
+                }
+              }
+            ]
+          },
+
+          // Challenges section
+          challenges: {
+            current: [
+              {
+                id: 'ch_1',
+                title: 'Business Meeting Simulation',
+                description: 'Practice your skills in a simulated business meeting',
+                type: 'critical',
+                difficulty: 'B1',
+                status: 'locked',
+                duration: '45min',
+                skills: ['pronunciation', 'vocabulary', 'comprehension'],
+                requirements: {
+                  exercises: ['ex_1', 'ex_3'],
+                  skillLevels: {
+                    pronunciation: 0.7,
+                    vocabulary: 0.75
+                  }
+                },
+                rewards: {
+                  xp: 100,
+                  skillPoints: {
+                    pronunciation: 20,
+                    vocabulary: 20,
+                    comprehension: 15
+                  }
+                },
+                uiData: {
+                  icon: 'challenge-business',
+                  color: 'gold',
+                  progressIndicator: 'segments'
+                }
+              }
+            ],
+            upcoming: [
+              {
+                id: 'ch_2',
+                title: 'Academic Presentation',
+                description: 'Deliver a short academic presentation',
+                type: 'improvement',
+                difficulty: 'B2',
+                status: 'locked',
+                duration: '60min',
+                skills: ['pronunciation', 'grammar', 'vocabulary'],
+                requirements: {
+                  exercises: ['ex_1', 'ex_2', 'ex_3'],
+                  skillLevels: {
+                    pronunciation: 0.75,
+                    grammar: 0.7,
+                    vocabulary: 0.8
+                  }
+                },
+                rewards: {
+                  xp: 150,
+                  skillPoints: {
+                    pronunciation: 25,
+                    grammar: 25,
+                    vocabulary: 25
+                  }
+                },
+                uiData: {
+                  icon: 'challenge-academic',
+                  color: 'platinum',
+                  progressIndicator: 'segments'
+                }
+              }
+            ]
+          },
+
+          // Progression tracking
+          progression: {
+            currentNodeId: 'ex_1',
+            availableNodeIds: ['ex_1', 'ex_3', 'ex_4'],
+            nodes: {
+              'ex_1': {
+                id: 'ex_1',
+                type: 'exercise',
+                status: 'available',
+                nextNodes: ['ex_2', 'ch_1'],
+                requirements: []
+              },
+              'ex_2': {
+                id: 'ex_2',
+                type: 'exercise',
+                status: 'locked',
+                nextNodes: ['ch_1', 'ch_2'],
+                requirements: ['ex_1']
+              },
+              'ch_1': {
+                id: 'ch_1',
+                type: 'challenge',
+                status: 'locked',
+                nextNodes: ['ch_2'],
+                requirements: ['ex_1', 'ex_3']
               }
             },
-            'ch_1': {
-              id: 'ch_1',
-              type: 'challenge',
-              status: 'locked',
-              data: {/* challenge data */},
-              unlockCriteria: {
-                requiredNodes: ['ex_1']
-              }
+            dependencies: {
+              'ex_2': ['ex_1'],
+              'ch_1': ['ex_1', 'ex_3'],
+              'ch_2': ['ex_1', 'ex_2', 'ex_3']
             }
           },
-          currentNodeId: 'ex_1',
+
+          // Progress tracking
           progress: {
-            overallProgress: 0,
-            skillProgress: {
-              pronunciation: 0,
-              grammar: 0,
-              vocabulary: 0,
-              comprehension: 0
+            overall: 0.15,
+            bySkill: {
+              pronunciation: 0.2,
+              grammar: 0.1,
+              vocabulary: 0.15,
+              comprehension: 0.15
             },
-            completedExercises: 0,
-            totalExercises: 12,
-            streakDays: 0
+            exercises: {
+              completed: 1,
+              total: 12,
+              recent: ['ex_1']
+            },
+            streak: {
+              current: 2,
+              lastActivity: new Date().toISOString(),
+              bestStreak: 5
+            }
+          },
+
+          // UI state
+          ui: {
+            lastViewedExercise: 'ex_1',
+            expandedSections: ['critical'],
+            bookmarkedExercises: ['ex_3']
           }
         }
       }
@@ -678,3 +837,4 @@ export const mockRoutes: MockRoute[] = [
       }
     }
   ]
+

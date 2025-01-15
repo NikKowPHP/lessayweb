@@ -9,7 +9,7 @@ import type {
   GrammarPromptResponse,
   ComprehensionPromptResponse
 } from '@/lib/models/responses/prompts/PromptResponses'
-import {  LanguagePreferenceRequest, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
+import {  LanguagePreferenceRequest, LanguagePreferences, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
 import { storageService } from './storageService'
 import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { AssessmentOrder, OnboardingSession, OnboardingStep } from '../types/onboardingTypes'
@@ -402,6 +402,18 @@ class OnboardingService {
       return { status: 'completed', result }
     } catch (error) {
       return { status: 'failed', error }
+    }
+  }
+
+  async createLearningPath(params: {
+    assessmentId: string
+    languagePreferences: LanguagePreferences
+  }) {
+    try {
+      const response = await this.api.createLearningPath(params)
+      return response
+    } catch (error) {
+      throw new Error('Failed to create learning path')
     }
   }
 }

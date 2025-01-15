@@ -11,6 +11,7 @@ import type { LanguageCode } from '@/constants/languages'
 import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
+import { setLearningPathWithResults } from './learningSlice'
 
 // Async Thunks
 export const startAssessment = createAsyncThunk(
@@ -90,6 +91,44 @@ export const submitFinalAssessment = createAsyncThunk(
   }
 )
 
+// Add new thunk for completing the assessment and creating learning path
+export const completeAssessmentAndCreatePath = createAsyncThunk(
+  'onboarding/completeAssessmentAndCreatePath',
+  async (_, { dispatch, getState }) => {
+    const state = getState() as RootState
+    const { finalAssessment, languagePreferences } = state.onboarding
+
+    if (!finalAssessment) {
+      // First get the final assessment if not available
+      await dispatch(completeAssessment()).unwrap()
+    }
+
+    // Get the updated state after completing assessment
+    const updatedState = getState() as RootState
+    const results = updatedState.onboarding.finalAssessment
+
+    if (!results) {
+      throw new Error('Failed to get assessment results')
+    }
+
+    // Create learning path
+    const response = await onboardingService.createLearningPath({
+      assessmentId: results.assessment_id,
+      languagePreferences: updatedState.onboarding.languagePreferences!
+    })
+
+    // Dispatch actions to update learning state
+    await dispatch(setLearningPathWithResults({
+      path: response,
+      assessmentResults: results
+    }))
+
+    // Reset onboarding state
+    dispatch(resetOnboarding())
+
+    return response
+  }
+)
 
 // Update rehydrateState thunk
 export const rehydrateState = createAsyncThunk(
@@ -204,6 +243,20 @@ export const rehydrateState = createAsyncThunk(
   }
 )
 
+// Add this with other thunks
+export const completeAssessment = createAsyncThunk(
+  'onboarding/completeAssessment',
+  async (_, { getState }) => {
+    const state = getState() as RootState
+    const { assessmentId } = state.onboarding
+
+    if (!assessmentId) {
+      throw new Error('No assessment ID found')
+    }
+
+    return await onboardingService.submitFinalAssessment(assessmentId)
+  }
+)
 
 const initialState: OnboardingState = {
   currentStep: OnboardingStep.Language,
@@ -362,15 +415,42 @@ const onboardingSlice = createSlice({
         }
       })
       
-      // Persist state on all successful actions
-      .addMatcher(
-        (action) => action.type.startsWith('onboarding/'),
-        (state) => {
-          // Persist state after any onboarding action
-          onboardingStorage.setSession(state).catch(console.error)
-          return state
-        }
-      )
+ 
+      // Complete Assessment and Create Path
+      .addCase(completeAssessmentAndCreatePath.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(completeAssessmentAndCreatePath.fulfilled, (state) => {
+        state.loading = false
+        state.currentStep = OnboardingStep.Complete
+      })
+      .addCase(completeAssessmentAndCreatePath.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to create learning path'
+      })
+      // Complete Assessment
+      .addCase(completeAssessment.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(completeAssessment.fulfilled, (state, action) => {
+        state.loading = false
+        state.finalAssessment = action.payload
+      })
+      .addCase(completeAssessment.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to complete assessment'
+      })
+           // Persist state on all successful actions
+           .addMatcher(
+            (action) => action.type.startsWith('onboarding/'),
+            (state) => {
+              // Persist state after any onboarding action
+              onboardingStorage.setSession(state).catch(console.error)
+              return state
+            }
+          )
   }
 })
 

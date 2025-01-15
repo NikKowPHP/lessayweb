@@ -15,7 +15,8 @@ import type {
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
 import type { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
-import {  LanguagePreferencesResponse, LanguagePreferenceRequest } from '@/lib/models/languages/LanguagePreferencesModel'
+import {  LanguagePreferencesResponse, LanguagePreferenceRequest, LanguagePreferences } from '@/lib/models/languages/LanguagePreferencesModel'
+import { LearningPath } from '../types/learningPath'
 
 export class OnboardingApi extends Api implements IOnboardingApi {
   private static instance: OnboardingApi
@@ -33,6 +34,7 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     COMPREHENSION_PROMPT: '/onboarding/assessment/comprehension/prompt',
     COMPREHENSION_SUBMIT: '/onboarding/assessment/comprehension/submit',
     SUBMIT_FINAL_ASSESSMENT: '/onboarding/assessment/final/submit',
+    CREATE_LEARNING_PATH: '/onboarding/learning/create',
   } as const
 
   private constructor() {
@@ -142,6 +144,17 @@ export class OnboardingApi extends Api implements IOnboardingApi {
     )
     return { data: response }
   }
+
+  async createLearningPath(params: {
+    assessmentId: string
+    languagePreferences: LanguagePreferences
+  }): Promise<LearningPath> {
+    const response = await this.post<LearningPath>(
+      OnboardingApi.ENDPOINTS.CREATE_LEARNING_PATH,
+      params
+    )
+    return response
+  } 
 }
 
 // Export singleton instance

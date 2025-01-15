@@ -17,7 +17,8 @@ import type {
   ComprehensionResponse
 } from '@/models/responses/assessments/AssessmentResponseIndex'
 import type { FinalAssessmentResponse } from '@/lib/models/responses/assessments/FinalAssessmentResponse'
-import { LanguagePreferenceRequest, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
+import { LanguagePreferenceRequest, LanguagePreferences, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
+import type { LearningPath } from '@/lib/types/learningPath'
 
 
 
@@ -60,4 +61,9 @@ export interface IOnboardingApi {
   submitFinalAssessment(
     assessmentId: string
   ): Promise<{ data: FinalAssessmentResponse }>
+
+  createLearningPath(params: {
+    assessmentId: string
+    languagePreferences: LanguagePreferences
+  }): Promise<LearningPath>
 } 

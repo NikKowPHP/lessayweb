@@ -492,5 +492,111 @@ export const mockRoutes: MockRoute[] = [
           }
         }
       }
+    },
+    {
+      path: '/learning-path/create',
+      method: 'POST',
+      response: {
+        status: 'success',
+        data: {
+          id: `path_${Date.now()}`,
+          userId: 'mock_user',
+          targetLanguage: 'de',
+          currentLevel: 'B1',
+          targetLevel: 'B2',
+          skills: {
+            pronunciation: {
+              type: 'pronunciation',
+              currentLevel: 0.65,
+              targetLevel: 0.85,
+              criticalPoints: ['th_sounds', 'intonation']
+            },
+            grammar: {
+              type: 'grammar',
+              currentLevel: 0.75,
+              targetLevel: 0.85,
+              criticalPoints: ['past_tense', 'conditionals']
+            },
+            vocabulary: {
+              type: 'vocabulary',
+              currentLevel: 0.70,
+              targetLevel: 0.80,
+              criticalPoints: ['professional_context', 'academic_terms']
+            },
+            comprehension: {
+              type: 'comprehension',
+              currentLevel: 0.72,
+              targetLevel: 0.82,
+              criticalPoints: ['cultural_context', 'idiomatic_expressions']
+            }
+          },
+          criticalExercises: [
+            {
+              id: 'ex_1',
+              title: 'Master TH Sounds',
+              description: 'Focus on improving th sound pronunciation',
+              type: 'pronunciation',
+              difficulty: 'B1',
+              status: 'available',
+              estimatedDuration: '20min',
+              focusAreas: ['th_sounds', 'phoneme_practice'],
+              prerequisites: [],
+              completionCriteria: {
+                minAccuracy: 0.8,
+                requiredAttempts: 5
+              }
+            },
+            // ... more exercises
+          ],
+          upcomingChallenges: [
+            {
+              id: 'ch_1',
+              title: 'Real-world Conversation',
+              type: 'critical',
+              difficulty: 'B1',
+              status: 'locked',
+              unlockCriteria: {
+                requiredExercises: ['ex_1', 'ex_2'],
+                minSkillLevels: {
+                  pronunciation: 0.75
+                }
+              }
+            }
+          ],
+          nodes: {
+            'ex_1': {
+              id: 'ex_1',
+              type: 'exercise',
+              status: 'available',
+              data: {/* exercise data */},
+              unlockCriteria: {
+                requiredNodes: []
+              }
+            },
+            'ch_1': {
+              id: 'ch_1',
+              type: 'challenge',
+              status: 'locked',
+              data: {/* challenge data */},
+              unlockCriteria: {
+                requiredNodes: ['ex_1']
+              }
+            }
+          },
+          currentNodeId: 'ex_1',
+          progress: {
+            overallProgress: 0,
+            skillProgress: {
+              pronunciation: 0,
+              grammar: 0,
+              vocabulary: 0,
+              comprehension: 0
+            },
+            completedExercises: 0,
+            totalExercises: 12,
+            streakDays: 0
+          }
+        }
+      }
     }
   ]

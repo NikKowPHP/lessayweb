@@ -49,10 +49,26 @@ export interface Challenge {
   }
 }
 
+export interface Assessment {
+  id: string
+  title: string
+  description: string
+  type: 'assessment'
+  status: ExerciseStatus
+  difficulty: DifficultyLevel
+  skillResults: Record<SkillType, {
+    currentLevel: number
+    targetLevel: number
+    progress: number
+    criticalPoints: string[]
+  }>
+  completedAt: string
+}
+
 export interface LearningPathNode {
   id: string
-  type: 'exercise' | 'challenge'
-  data: Exercise | Challenge
+  type: 'exercise' | 'challenge' | 'assessment'
+  data: Exercise | Challenge | Assessment
   nextNodes: string[]
   completed: boolean
   unlockCriteria: {

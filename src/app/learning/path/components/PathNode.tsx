@@ -3,16 +3,51 @@ import { Handle, Position } from 'reactflow'
 import { Badge } from '@/components/ui/Badge'
 import { getSkillColor, getSkillIcon } from '@/lib/utils/skillColors'
 import { cn } from '@/lib/utils/cn'
-import { SkillType, Exercise, Challenge } from '@/lib/types/learningPath'
+import { SkillType } from '@/lib/types/learningPath'
 
 interface PathNodeProps {
   data: {
     label: string
-    type: 'exercise' | 'challenge'
+    type: 'exercise' | 'challenge' | 'assessment'
     status: 'locked' | 'available' | 'in_progress' | 'completed'
     skills: SkillType[]
-    exercise: Exercise | Challenge
+    skillProgress?: Record<SkillType, {
+      currentLevel: number
+      targetLevel: number
+      progress: number
+    }>
   }
+}
+
+const ProgressBar = ({ skill, progress, currentLevel, targetLevel }: {
+  skill: SkillType
+  progress: number
+  currentLevel: number
+  targetLevel: number
+}) => {
+  const color = getSkillColor(skill)
+  const SkillIcon = getSkillIcon(skill)
+  
+  return (
+    <div className="flex flex-col gap-1 w-full">
+      <div className="flex items-center justify-between text-xs text-white">
+        <div className="flex items-center gap-1">
+          <SkillIcon className="w-3 h-3" />
+          <span>{skill}</span>
+        </div>
+        <span>{Math.round(currentLevel * 100)}%</span>
+      </div>
+      <div className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+        <div 
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            `bg-${color}-500 dark:bg-${color}-400`
+          )}
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+    </div>
+  )
 }
 
 export const PathNode = memo(({ data }: PathNodeProps) => {
@@ -25,7 +60,8 @@ export const PathNode = memo(({ data }: PathNodeProps) => {
 
   return (
     <div className={cn(
-      'px-4 py-3 rounded-lg shadow-md w-64',
+      'px-4 py-3 rounded-lg shadow-md',
+      data.type === 'assessment' ? 'w-[300px]' : 'w-[200px]',
       'border-2 transition-all duration-200',
       data.status === 'locked' ? 'opacity-50' : 'hover:scale-105',
       statusColors[data.status]
@@ -36,28 +72,42 @@ export const PathNode = memo(({ data }: PathNodeProps) => {
         className="!bg-gray-400 dark:!bg-gray-600"
       />
       
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-3">
         <h3 className="font-semibold text-sm text-white">
           {data.label}
         </h3>
         
-        <div className="flex flex-wrap gap-1">
-          {data.skills.map(skill => {
-            const SkillIcon = getSkillIcon(skill)
-            const color = getSkillColor(skill)
-            return (
-              <Badge
+        {data.type === 'assessment' && data.skillProgress ? (
+          <div className="flex flex-col gap-2">
+            {Object.entries(data.skillProgress).map(([skill, progress]) => (
+              <ProgressBar
                 key={skill}
-                color={color}
-                size="sm"
-                variant="soft"
-                icon={<SkillIcon className="w-3 h-3" />}
-              >
-                {skill}
-              </Badge>
-            )
-          })}
-        </div>
+                skill={skill as SkillType}
+                progress={progress.progress}
+                currentLevel={progress.currentLevel}
+                targetLevel={progress.targetLevel}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-wrap gap-1">
+            {data.skills.map(skill => {
+              const SkillIcon = getSkillIcon(skill)
+              const color = getSkillColor(skill)
+              return (
+                <Badge
+                  key={skill}
+                  color={color}
+                  size="sm"
+                  variant="soft"
+                  icon={<SkillIcon className="w-3 h-3" />}
+                >
+                  {skill}
+                </Badge>
+              )
+            })}
+          </div>
+        )}
       </div>
 
       <Handle 

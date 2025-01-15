@@ -4,18 +4,24 @@ import {
   Exercise, 
   Challenge, 
   SkillType,
-  ExerciseStatus 
+  ExerciseStatus,
+  Assessment
 } from '@/lib/types/learningPath'
 
 // Define the node data structure
 interface PathNodeData {
   label: string
-  type: 'exercise' | 'challenge'
+  type: 'exercise' | 'challenge' | 'assessment'
   status: ExerciseStatus
   skills: SkillType[]
-  item: Exercise | Challenge
+  item: Exercise | Challenge | Assessment | null // Allow null for backward compatibility
   difficulty: string
   description: string
+  skillProgress?: Record<SkillType, {
+    currentLevel: number
+    targetLevel: number
+    progress: number
+  }>
 }
 
 export function generatePathElements(path: LearningPath) {
@@ -23,6 +29,52 @@ export function generatePathElements(path: LearningPath) {
   const edges: Edge[] = []
   let yPosition = 0
   const centerX = 400
+
+  // Create assessment item
+  const assessmentItem: Assessment = {
+    id: 'initial_assessment',
+    title: 'Initial Assessment',
+    description: 'Your initial language assessment results',
+    type: 'assessment',
+    status: 'completed',
+    difficulty: path.currentLevel,
+    skillResults: Object.entries(path.skills).reduce((acc, [skill, data]) => ({
+      ...acc,
+      [skill]: {
+        currentLevel: data.currentLevel,
+        targetLevel: data.targetLevel,
+        progress: data.progress || 0,
+        criticalPoints: data.criticalPoints
+      }
+    }), {} as Record<SkillType, any>),
+    completedAt: path.progress.streak.lastActivity
+  }
+
+  // Add assessment node
+  const assessmentNode: Node<PathNodeData> = {
+    id: 'assessment',
+    type: 'pathNode',
+    position: { x: centerX, y: yPosition },
+    data: {
+      label: 'Initial Assessment',
+      type: 'assessment',
+      status: 'completed',
+      skills: Object.keys(path.skills) as SkillType[],
+      item: assessmentItem,
+      difficulty: path.currentLevel,
+      description: 'Your initial language assessment results',
+      skillProgress: Object.entries(path.skills).reduce((acc, [skill, data]) => ({
+        ...acc,
+        [skill]: {
+          currentLevel: data.currentLevel,
+          targetLevel: data.targetLevel,
+          progress: data.progress || 0
+        }
+      }), {}) as Record<SkillType, { currentLevel: number; targetLevel: number; progress: number }>
+    }
+  }
+  nodes.push(assessmentNode)
+  yPosition += 300
 
   // Helper function to find the full item data
   const findItemData = (id: string, type: 'exercise' | 'challenge'): Exercise | Challenge | undefined => {
@@ -60,7 +112,7 @@ export function generatePathElements(path: LearningPath) {
   // Create nodes and edges
   sortedNodes.forEach(([nodeId, pathNode]) => {
     // Find the full item data
-    const fullItem = findItemData(nodeId, pathNode.type)
+    const fullItem = findItemData(nodeId, pathNode.type as 'exercise' | 'challenge')
     
     if (!fullItem) {
       console.error(`Could not find data for node ${nodeId}`)
@@ -96,6 +148,17 @@ export function generatePathElements(path: LearningPath) {
     })
 
     yPosition += 150
+  })
+
+  // Add edges from assessment to first available nodes
+  path.progression.availableNodeIds.forEach(nodeId => {
+    edges.push({
+      id: `e-assessment-${nodeId}`,
+      source: 'assessment',
+      target: nodeId,
+      animated: true,
+      style: { stroke: '#94a3b8' }
+    })
   })
 
   return { nodes, edges }

@@ -175,10 +175,20 @@ class OnboardingService {
 
       console.info('Starting assessment', { firstType })
       
-      const initialSession = initialOnboardingState
+      // Check if we already have a session
+      const existingSession = await this.storage.getSession()
       
-      await this.storage.setSession(initialSession)
-      console.debug('Initial session created', { session: initialSession })
+      // If we have an existing session with prompts, use that instead
+      if (existingSession?.prompts?.[firstType]) {
+        console.info('Using existing session', { 
+          type: firstType,
+          hasPrompt: true 
+        })
+        return existingSession.prompts[firstType]
+      }
+      
+      // If no existing session or no prompts, create new session
+      const initialSession = existingSession || initialOnboardingState
       
       // Get first prompt while initiating other fetches
       const firstPrompt = await this.initializePromptQueue(firstType)
@@ -187,19 +197,19 @@ class OnboardingService {
         throw new Error('Failed to fetch initial prompt')
       }
       
-      // Update session with first prompt
-      const currentSession = await this.storage.getSession()
+      // Update session with first prompt while preserving existing data
       await this.storage.setSession({
-        ...currentSession,
+        ...initialSession,
         prompts: {
-          ...currentSession?.prompts,
+          ...initialSession.prompts,
           [firstType]: firstPrompt
         }
       } as OnboardingState)
       
       console.info('Assessment started successfully', { 
         type: firstType,
-        hasPrompt: !!firstPrompt 
+        hasPrompt: !!firstPrompt,
+        isNewSession: !existingSession
       })
       
       return firstPrompt

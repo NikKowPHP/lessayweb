@@ -1,14 +1,25 @@
-import { createSlice, createAsyncThunk, createAction, PayloadAction } from '@reduxjs/toolkit'
+import {
+  createSlice,
+  createAsyncThunk,
+  createAction,
+  PayloadAction,
+} from '@reduxjs/toolkit'
 import { onboardingService } from '@/lib/services/onboardingService'
 import type { RootState } from '@/store'
-import { 
-  AssessmentType, 
-  OnboardingStep, 
+import {
+  AssessmentType,
+  OnboardingStep,
   OnboardingState,
   SubmissionStatus,
 } from '@/lib/types/onboardingTypes'
 import type { LanguageCode } from '@/constants/languages'
-import { BaseAssessmentRequest, ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
+import {
+  BaseAssessmentRequest,
+  ComprehensionAssessmentRequest,
+  GrammarAssessmentRequest,
+  PronunciationAssessmentRequest,
+  VocabularyAssessmentRequest,
+} from '@/lib/models/requests/assessments/AssessmentRequests'
 import { onboardingStorage } from '@/lib/services/onboardingStorage'
 import { languagePreferencesStorage } from '@/lib/services/languagePreferencesStorage'
 import { setLearningPathWithResults } from './learningSlice'
@@ -23,14 +34,19 @@ export const startAssessment = createAsyncThunk(
 
 export const submitLanguagePreferences = createAsyncThunk(
   'onboarding/submitLanguagePreferences',
-  async (preferences: { nativeLanguage: LanguageCode; targetLanguage: LanguageCode }) => {
+  async (preferences: {
+    nativeLanguage: LanguageCode
+    targetLanguage: LanguageCode
+  }) => {
     await onboardingService.submitLanguagePreferences(preferences)
     // Store preferences locally
     await languagePreferencesStorage.setPreferences({
       ...preferences,
     })
     // Initialize prompt queue
-    return await onboardingService.initializePromptQueue(AssessmentType.Pronunciation)
+    return await onboardingService.initializePromptQueue(
+      AssessmentType.Pronunciation
+    )
   }
 )
 
@@ -41,28 +57,40 @@ export const getPrompt = createAsyncThunk(
   }
 )
 
-
 export const submitAssessment = createAsyncThunk(
   'onboarding/submitAssessment',
-  async ({ type, data }: { type: AssessmentType; data: BaseAssessmentRequest }, { dispatch }) => {
-     // Immediately return to allow UI to continue
-    dispatch(setSubmissionStatus({ type, status: 'pending', error: null } ))
+  async (
+    { type, data }: { type: AssessmentType; data: BaseAssessmentRequest },
+    { dispatch }
+  ) => {
+    // Immediately return to allow UI to continue
+    dispatch(setSubmissionStatus({ type, status: 'pending', error: null }))
     try {
-
       let response
       switch (type) {
-      
         case AssessmentType.Pronunciation:
-          response = await onboardingService.submitPronunciationAssessment(data as PronunciationAssessmentRequest, true)
+          response = await onboardingService.submitPronunciationAssessment(
+            data as PronunciationAssessmentRequest,
+            true
+          )
           break
         case AssessmentType.Vocabulary:
-          response = await onboardingService.submitVocabularyAssessment(data as VocabularyAssessmentRequest, true)
+          response = await onboardingService.submitVocabularyAssessment(
+            data as VocabularyAssessmentRequest,
+            true
+          )
           break
         case AssessmentType.Grammar:
-          response = await onboardingService.submitGrammarAssessment(data as GrammarAssessmentRequest, true)
+          response = await onboardingService.submitGrammarAssessment(
+            data as GrammarAssessmentRequest,
+            true
+          )
           break
         case AssessmentType.Comprehension:
-          response = await onboardingService.submitComprehensionAssessment(data as ComprehensionAssessmentRequest, true)
+          response = await onboardingService.submitComprehensionAssessment(
+            data as ComprehensionAssessmentRequest,
+            true
+          )
           break
         default:
           throw new Error('Invalid assessment type')
@@ -70,7 +98,13 @@ export const submitAssessment = createAsyncThunk(
       dispatch(setSubmissionStatus({ type, status: 'completed', error: null }))
       return response
     } catch (error) {
-      dispatch(setSubmissionStatus({ type, status: 'failed', error: (error as Error).message }))
+      dispatch(
+        setSubmissionStatus({
+          type,
+          status: 'failed',
+          error: (error as Error).message,
+        })
+      )
       throw error
     }
   },
@@ -80,7 +114,7 @@ export const submitAssessment = createAsyncThunk(
       const currentStatus = state.onboarding.submissionStatus[arg.type]
       // Prevent duplicate submissions
       return !currentStatus || currentStatus.status !== 'pending'
-    }
+    },
   }
 )
 
@@ -96,18 +130,21 @@ export const completeAssessmentAndCreatePath = createAsyncThunk(
   'onboarding/completeAssessmentAndCreatePath',
   async (_, { dispatch, getState }) => {
     const state = getState() as RootState
-    const { finalAssessment, languagePreferences, assessmentId } = state.onboarding
+    const { finalAssessment, languagePreferences, assessmentId } =
+      state.onboarding
 
     let results = finalAssessment
-    
+
     if (!results && assessmentId) {
       // Get final assessment only if we have an assessmentId and no results yet
-      const assessmentResults = await onboardingService.submitFinalAssessment(assessmentId)
+      const assessmentResults = await onboardingService.submitFinalAssessment(
+        assessmentId
+      )
       results = assessmentResults
       // Update the state with final assessment results
-      dispatch({ 
-        type: 'onboarding/completeAssessment/fulfilled', 
-        payload: assessmentResults 
+      dispatch({
+        type: 'onboarding/completeAssessment/fulfilled',
+        payload: assessmentResults,
       })
     }
 
@@ -118,14 +155,16 @@ export const completeAssessmentAndCreatePath = createAsyncThunk(
     // Create learning path
     const response = await onboardingService.createLearningPath({
       assessmentId: results.assessment_id,
-      languagePreferences: languagePreferences
+      languagePreferences: languagePreferences,
     })
 
     // Dispatch actions to update learning state
-    await dispatch(setLearningPathWithResults({
-      path: response,
-      assessmentResults: results
-    }))
+    await dispatch(
+      setLearningPathWithResults({
+        path: response,
+        assessmentResults: results,
+      })
+    )
 
     return response
   }
@@ -136,11 +175,10 @@ export const rehydrateState = createAsyncThunk(
   'onboarding/rehydrate',
   async (_, { dispatch }) => {
     const [savedState, languagePrefs] = await Promise.all([
-      onboardingStorage.getSession(),
-      languagePreferencesStorage.getPreferences()
+      onboardingService.getStoredState(),
+      languagePreferencesStorage.getPreferences(),
     ])
- 
-    
+
     if (savedState) {
       if (savedState.currentStep) {
         dispatch(setCurrentStep(savedState.currentStep))
@@ -151,13 +189,11 @@ export const rehydrateState = createAsyncThunk(
       if (savedState.assessmentProgress) {
         dispatch(updateAssessmentProgress(savedState.assessmentProgress))
       }
-    
-      
     }
 
-     // Check if we need to initialize prompts
-    const needsPrompts = !savedState?.prompts || 
-      Object.keys(savedState.prompts).length === 0
+    // Check if we need to initialize prompts
+    const needsPrompts =
+      !savedState?.prompts || Object.keys(savedState.prompts).length === 0
 
     if (needsPrompts && languagePrefs) {
       try {
@@ -167,52 +203,56 @@ export const rehydrateState = createAsyncThunk(
           AssessmentType.Pronunciation
         )
         console.log('firstPrompt', firstPrompt)
-        
+
         // Update the saved state with the new prompts
         const updatedState = {
           ...savedState,
           prompts: {
-            [AssessmentType.Pronunciation]: firstPrompt
+            [AssessmentType.Pronunciation]: firstPrompt,
           },
-          assessmentType: AssessmentType.Pronunciation
+          assessmentType: AssessmentType.Pronunciation,
         }
 
         console.log('updatedState with prompts', updatedState)
 
         // Save the updated state
-        await onboardingStorage.setSession(updatedState as OnboardingState)
+        await onboardingService.setStoredState(updatedState as OnboardingState)
 
-         // Handle background loading of other prompts
-         const handleBackgroundPrompts = async () => {
+        // Handle background loading of other prompts
+        const handleBackgroundPrompts = async () => {
           try {
             const remainingTypes = [
               AssessmentType.Vocabulary,
               AssessmentType.Grammar,
-              AssessmentType.Comprehension
+              AssessmentType.Comprehension,
             ]
 
             // As each prompt loads, update the state
-            remainingTypes.forEach(type => {
-              onboardingService.getPrompt(type)
+            remainingTypes.forEach((type) => {
+              onboardingService
+                .getPrompt(type)
                 .then(async (prompt) => {
                   if (prompt) {
                     // Get current state
-                    const currentState = await onboardingStorage.getSession()
+                    const currentState = await onboardingService.getStoredState()
                     // Update state with new prompt
                     const newState = {
                       ...currentState,
                       prompts: {
                         ...currentState?.prompts,
-                        [type]: prompt
-                      }
+                        [type]: prompt,
+                      },
                     }
                     // Save updated state
-                    await onboardingStorage.setSession(newState as OnboardingState)
+                    await onboardingService.setStoredState(
+                      newState as OnboardingState
+                    )
+                    console.log('newState after fetching the prompts ', newState)
                     // Dispatch action to update Redux store
                     dispatch(updatePrompts(newState.prompts))
                   }
                 })
-                .catch(error => {
+                .catch((error) => {
                   console.error(`Failed to load ${type} prompt:`, error)
                 })
             })
@@ -223,23 +263,23 @@ export const rehydrateState = createAsyncThunk(
 
         // Start background loading without awaiting
         handleBackgroundPrompts()
-        
+
         // Return the updated state
         return {
           onboardingState: updatedState,
-          languagePreferences: languagePrefs
+          languagePreferences: languagePrefs,
         }
       } catch (error) {
         console.error('Failed to initialize prompts:', error)
         return {
           onboardingState: savedState,
-          languagePreferences: languagePrefs
+          languagePreferences: languagePrefs,
         }
       }
     }
     return {
       onboardingState: savedState,
-      languagePreferences: languagePrefs
+      languagePreferences: languagePrefs,
     }
   }
 )
@@ -277,24 +317,32 @@ const initialState: OnboardingState = {
     [AssessmentType.Pronunciation]: {
       type: AssessmentType.Pronunciation,
       status: null,
-      error: null
+      error: null,
     },
     [AssessmentType.Vocabulary]: {
       type: AssessmentType.Vocabulary,
       status: null,
-      error: null
+      error: null,
     },
     [AssessmentType.Grammar]: {
       type: AssessmentType.Grammar,
       status: null,
-      error: null
+      error: null,
     },
     [AssessmentType.Comprehension]: {
       type: AssessmentType.Comprehension,
       status: null,
-      error: null
-    }
-  }
+      error: null,
+    },
+  },
+}
+
+// Add this middleware function outside the slice
+const persistOnboardingState = (state: OnboardingState) => {
+  // Don't block the reducer, handle persistence separately
+  onboardingStorage.setSession(state).catch(error => {
+    console.error('Failed to persist onboarding state:', error)
+  })
 }
 
 const onboardingSlice = createSlice({
@@ -316,7 +364,7 @@ const onboardingSlice = createSlice({
     },
     setSubmissionStatus: (state, action: PayloadAction<SubmissionStatus>) => {
       state.submissionStatus[action.payload.type] = action.payload
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -351,7 +399,7 @@ const onboardingSlice = createSlice({
           state.submissionStatus[state.assessmentType] = {
             type: state.assessmentType,
             status: 'completed',
-            error: null
+            error: null,
           }
         }
       })
@@ -362,11 +410,11 @@ const onboardingSlice = createSlice({
       })
       // rehydrate state
       .addCase(rehydrateState.fulfilled, (state, action) => {
-        state.sessionLoaded = true;
+        state.sessionLoaded = true
 
         console.log('savedState', action.payload.onboardingState)
         console.log('saved languagePrefs', action.payload.languagePreferences)
-      
+
         if (action.payload.onboardingState) {
           const {
             currentStep,
@@ -376,9 +424,9 @@ const onboardingSlice = createSlice({
             responses,
             assessmentId,
             finalAssessment,
-            promptLoadStatus
-          } = action.payload.onboardingState;
-      
+            promptLoadStatus,
+          } = action.payload.onboardingState
+
           Object.assign(state, {
             currentStep,
             assessmentType,
@@ -391,32 +439,31 @@ const onboardingSlice = createSlice({
               [AssessmentType.Pronunciation]: false,
               [AssessmentType.Vocabulary]: false,
               [AssessmentType.Grammar]: false,
-              [AssessmentType.Comprehension]: false
-            }
-          });
+              [AssessmentType.Comprehension]: false,
+            },
+          })
         }
-      
+
         if (action.payload.languagePreferences) {
           // Create a proper LanguagePreferencesState object from the simple preferences object
           state.languagePreferences = {
             nativeLanguage: action.payload.languagePreferences.nativeLanguage,
             targetLanguage: action.payload.languagePreferences.targetLanguage,
             isSubmitting: false,
-            error: null
-          };
+            error: null,
+          }
 
           console.log('languagePreferences state', state.languagePreferences)
-          console.log('state current', JSON.stringify(state, null, 2));
-      
+          console.log('state current', JSON.stringify(state, null, 2))
+
           // If we have language preferences but are still on the language step,
           // we should move to the next step
           if (state.currentStep === OnboardingStep.Language) {
-            state.currentStep = OnboardingStep.AssessmentIntro;
+            state.currentStep = OnboardingStep.AssessmentIntro
           }
         }
       })
-      
- 
+
       // Complete Assessment and Create Path
       .addCase(completeAssessmentAndCreatePath.pending, (state) => {
         state.loading = true
@@ -443,38 +490,38 @@ const onboardingSlice = createSlice({
         state.loading = false
         state.error = action.error.message || 'Failed to complete assessment'
       })
-           // Persist state on all successful actions
-           .addMatcher(
-            (action) => action.type.startsWith('onboarding/'),
-            (state) => {
-              // Persist state after any onboarding action
-              onboardingStorage.setSession(state).catch(console.error)
-              return state
-            }
-          )
-  }
+      // Persist state on all successful actions
+      .addMatcher(
+        (action) => action.type.startsWith('onboarding/'),
+        (state, action) => {
+          // Don't persist during rehydration
+          if (!action.type.includes('rehydrate')) {
+            persistOnboardingState(state)
+          }
+          return state
+        }
+      )
+  },
 })
 
 // Selectors
 export const selectOnboardingState = (state: RootState) => state.onboarding
-export const selectCurrentStep = (state: RootState) => state.onboarding.currentStep
-export const selectAssessmentType = (state: RootState) => state.onboarding.assessmentType
-export const selectAssessmentProgress = (state: RootState) => state.onboarding.assessmentProgress
+export const selectCurrentStep = (state: RootState) =>
+  state.onboarding.currentStep
+export const selectAssessmentType = (state: RootState) =>
+  state.onboarding.assessmentType
+export const selectAssessmentProgress = (state: RootState) =>
+  state.onboarding.assessmentProgress
 export const selectPrompts = (state: RootState) => state.onboarding.prompts
 export const selectResponses = (state: RootState) => state.onboarding.responses
 
-export const { 
-  setCurrentStep, 
-  setAssessmentType, 
-  updateAssessmentProgress, 
+export const {
+  setCurrentStep,
+  setAssessmentType,
+  updateAssessmentProgress,
   resetOnboarding,
   updatePrompts,
-  setSubmissionStatus
+  setSubmissionStatus,
 } = onboardingSlice.actions
 
 export default onboardingSlice.reducer
-
-
-
-
-

@@ -17,7 +17,7 @@ export default function AuthLayout({
   
   const { isAuthenticated, loading: authLoading } = useAppSelector((state) => state.auth)
   const { currentStep, languagePreferences, sessionLoaded } = useAppSelector((state) => state.onboarding)
-  const onboardingState = useAppSelector(state => state.onboarding)
+  // const onboardingState = useAppSelector(state => state.onboarding)
   // Determine onboarding status
   const hasLanguagePreferences = !!languagePreferences
   const isOnboardingComplete = currentStep === 'complete'
@@ -27,8 +27,9 @@ export default function AuthLayout({
     const initializeApp = async () => {
       try {
         await dispatch(initializeAuth()).unwrap()
-        await dispatch(rehydrateState()).unwrap()
-        console.log('rehydrated state', onboardingState)
+        if (!sessionLoaded) {
+          await dispatch(rehydrateState()).unwrap()
+        }
       } catch (error) {
         console.error('Failed to initialize app', error as Error)
       }

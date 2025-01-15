@@ -10,41 +10,44 @@ import type {
   ComprehensionPromptResponse
 } from '@/lib/models/responses/prompts/PromptResponses'
 import {  LanguagePreferenceRequest, LanguagePreferences, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
-import { storageService } from './storageService'
 import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
-import { AssessmentOrder, OnboardingSession, OnboardingStep } from '../types/onboardingTypes'
+import { AssessmentOrder, initialOnboardingState, OnboardingState, } from '../types/onboardingTypes'
 import { AssessmentType } from '../types/onboardingTypes'
 // import { logger } from '../utils/logger'
 import { languagePreferencesStorage } from './languagePreferencesStorage'
+import { OnboardingStorage, onboardingStorage } from './onboardingStorage'
 
 
 class OnboardingService {
   private api: IOnboardingApi
   private promptQueue: Map<AssessmentType, Promise<any>>
   private submissionQueue: Map<string, Promise<any>>
+  private storage: OnboardingStorage
   constructor(api?: IOnboardingApi) {
     this.api = api || (process.env.NODE_ENV === 'development' 
       ? new MockOnboardingApi()
       : OnboardingApi.getInstance())
     this.promptQueue = new Map()
     this.submissionQueue = new Map()
+    this.storage = onboardingStorage
   }
 
   async initializePromptQueue(firstType: AssessmentType) {
     // First, start fetching the first prompt immediately
     const priorityPromptPromise = this.fetchPrompt(firstType)
       .then(async (prompt) => {
-        await storageService.updateOnboardingSession({
+        const currentSession = await this.storage.getSession()
+        await this.storage.setSession({
+          ...currentSession,
           prompts: {
+            ...currentSession?.prompts,
             [firstType]: prompt
           },
           promptLoadStatus: {
-            pronunciation: firstType === AssessmentType.Pronunciation,
-            vocabulary: firstType === AssessmentType.Vocabulary,
-            grammar: firstType === AssessmentType.Grammar,
-            comprehension: firstType === AssessmentType.Comprehension
+            ...currentSession?.promptLoadStatus,
+            [firstType]: true
           }
-        })
+        } as OnboardingState)
         console.info('Priority prompt loaded and stored', { type: firstType })
         return prompt
       })
@@ -58,19 +61,18 @@ class OnboardingService {
     remainingTypes.forEach(type => {
       const promise = this.fetchPrompt(type)
         .then(async (prompt) => {
-          const currentSession = await storageService.getOnboardingSession()
-          await storageService.updateOnboardingSession({
+          const currentSession = await this.storage.getSession()
+          await this.storage.setSession({
+            ...currentSession,
             prompts: {
+              ...currentSession?.prompts,
               [type]: prompt
             },
             promptLoadStatus: {
-              pronunciation: currentSession?.promptLoadStatus.pronunciation || false,
-              vocabulary: currentSession?.promptLoadStatus.vocabulary || false,
-              grammar: currentSession?.promptLoadStatus.grammar || false,
-              comprehension: currentSession?.promptLoadStatus.comprehension || false,
+              ...currentSession?.promptLoadStatus,
               [type]: true
             }
-          })
+          } as OnboardingState)
           console.info('Background prompt loaded and stored', { type })
           return prompt
         })
@@ -152,9 +154,10 @@ class OnboardingService {
   }
 
   private async updatePromptLoadStatus(type: AssessmentType, loaded: boolean) {
-    const session = await storageService.getOnboardingSession()
+    const session = await this.storage.getSession()
     if (session) {
-      storageService.updateOnboardingSession({
+      await this.storage.setSession({
+        ...session,
         promptLoadStatus: {
           ...session.promptLoadStatus,
           [type]: loaded
@@ -172,22 +175,9 @@ class OnboardingService {
 
       console.info('Starting assessment', { firstType })
       
-      const initialSession: OnboardingSession = {
-        assessmentId: null,
-        currentStep: OnboardingStep.AssessmentIntro,
-        assessmentType: firstType,
-        assessmentProgress: 0,
-        prompts: {},
-        responses: {},
-        promptLoadStatus: {
-          [AssessmentType.Pronunciation]: false,
-          [AssessmentType.Vocabulary]: false,
-          [AssessmentType.Grammar]: false,
-          [AssessmentType.Comprehension]: false
-        }
-      }
+      const initialSession = initialOnboardingState
       
-      await storageService.setOnboardingSession(initialSession)
+      await this.storage.setSession(initialSession)
       console.debug('Initial session created', { session: initialSession })
       
       // Get first prompt while initiating other fetches
@@ -198,11 +188,14 @@ class OnboardingService {
       }
       
       // Update session with first prompt
-      await storageService.updateOnboardingSession({
+      const currentSession = await this.storage.getSession()
+      await this.storage.setSession({
+        ...currentSession,
         prompts: {
+          ...currentSession?.prompts,
           [firstType]: firstPrompt
         }
-      })
+      } as OnboardingState)
       
       console.info('Assessment started successfully', { 
         type: firstType,
@@ -416,7 +409,15 @@ class OnboardingService {
       throw new Error('Failed to create learning path')
     }
   }
+
+  async getStoredState() {
+    return await this.storage.getSession()
+  }
+  async setStoredState(state: OnboardingState) {
+    return await this.storage.setSession(state)
+  }
 }
+
 
 // Export a singleton instance
 export const onboardingService = new OnboardingService()

@@ -598,5 +598,83 @@ export const mockRoutes: MockRoute[] = [
           }
         }
       }
+    },
+    {
+      path: '/comprehension/submit',
+      method: 'POST',
+      response: {
+        assessment_id: `mock_${Date.now()}`,
+        step_id: `comprehension_${Date.now()}`,
+        timestamp: new Date().toISOString(),
+        is_completed: true,
+        metrics: {
+          understanding: 0.75,
+          context_awareness: 0.80,
+          cultural_competency: 0.70
+        },
+        comprehension_score: 0.78,
+        question_analyses: [
+          {
+            question_id: 'q1',
+            score: 0.85,
+            explanation: 'Good understanding of greeting context',
+            criteria_scores: {
+              'cultural_awareness': 0.75,
+              'language_comprehension': 0.85
+            },
+            detected_concepts: ['morning_greeting', 'politeness'],
+            missing_concepts: ['time_specific_greeting'],
+            improvements: {
+              'greeting_formality': 'Consider more formal greeting options',
+              'cultural_context': 'Pay attention to time-specific greetings'
+            },
+            confidence_score: 0.82,
+            language_analysis: {
+              grammar_accuracy: 0.85,
+              vocabulary_richness: 0.75,
+              coherence: 0.80,
+              grammar_errors: [
+                {
+                  error_type: 'word_order',
+                  description: 'Incorrect time expression placement',
+                  context: 'morning in the',
+                  suggestion: 'in the morning',
+                  confidence: 0.90
+                }
+              ],
+              vocabulary_usage: {
+                greetings: 2,
+                time_expressions: 1,
+                politeness_markers: 3
+              }
+            },
+            content_analysis: {
+              relevance: 0.85,
+              completeness: 0.80,
+              contextual_understanding: 0.75,
+              key_points_covered: ['greeting_context', 'time_awareness'],
+              missed_points: ['cultural_specifics'],
+              topic_alignment: {
+                'café_interaction': 0.85,
+                'cultural_norms': 0.70
+              }
+            }
+          }
+        ],
+        skill_breakdown: {
+          'listening': 0.80,
+          'cultural_awareness': 0.75,
+          'context_understanding': 0.85
+        },
+        misunderstood_concepts: [
+          'formal_vs_informal_greetings',
+          'time_specific_expressions'
+        ],
+        confidence_metrics: {
+          overall_confidence: 0.80,
+          response_time: 0.85,
+          answer_coherence: 0.75
+        }
+      }
     }
   ]

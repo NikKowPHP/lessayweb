@@ -7,7 +7,7 @@ import { cloneDeep } from 'lodash'
 const STORAGE_KEY = 'onboarding_session'
 const SESSION_KEY = 'onboarding_session_cache'
 
-class OnboardingStorage extends AbstractStorage {
+export class OnboardingStorage extends AbstractStorage {
   private static instance: OnboardingStorage
   private sessionCache: Storage | null
 
@@ -43,32 +43,67 @@ class OnboardingStorage extends AbstractStorage {
 
   private deserializeState(serializedState: string): OnboardingState {
     try {
-      return JSON.parse(serializedState) as OnboardingState
+      const parsed = JSON.parse(serializedState);
+      
+      // Validate essential properties
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Invalid state structure');
+      }
+
+      // Ensure all required properties exist with correct types
+      const state: OnboardingState = {
+        currentStep: parsed.currentStep ?? null,
+        assessmentType: parsed.assessmentType ?? null,
+        loading: Boolean(parsed.loading),
+        error: parsed.error ?? null,
+        assessmentProgress: Number(parsed.assessmentProgress) || 0,
+        assessmentId: parsed.assessmentId ?? null,
+        prompts: parsed.prompts ?? {},
+        responses: parsed.responses ?? {},
+        promptsLoaded: Boolean(parsed.promptsLoaded),
+        sessionLoaded: Boolean(parsed.sessionLoaded),
+        finalAssessment: parsed.finalAssessment ?? null,
+        promptLoadStatus: parsed.promptLoadStatus ?? {},
+        languagePreferences: parsed.languagePreferences ?? null,
+        submissionStatus: parsed.submissionStatus ?? {
+          pronunciation: { type: 'pronunciation', status: null, error: null },
+          vocabulary: { type: 'vocabulary', status: null, error: null },
+          grammar: { type: 'grammar', status: null, error: null },
+          comprehension: { type: 'comprehension', status: null, error: null }
+        }
+      }
+      
+
+      return state
     } catch (error) {
-      console.error('Failed to deserialize state:', error as Error)
-      throw error
+      console.error('Failed to deserialize state:', error as Error);
+      throw error;
     }
   }
 
   async getSession(): Promise<OnboardingState | null> {
     try {
-      // Try session cache first for faster access
+      // Try session cache first
       if (this.sessionCache) {
         const cached = this.sessionCache.getItem(SESSION_KEY)
         if (cached) {
-          return this.deserializeState(cached)
+          const state = this.deserializeState(cached)
+          console.debug('Retrieved state from session cache')
+          return state
         }
       }
 
       // Fall back to persistent storage
       const persisted = await this.get<OnboardingState>(STORAGE_KEY)
-      
-      // Update session cache if data found
-      if (persisted && this.sessionCache) {
-        this.sessionCache.setItem(SESSION_KEY, this.serializeState(persisted))
+      if (persisted) {
+        // Update session cache
+        const serialized = this.serializeState(persisted)
+        this.sessionCache?.setItem(SESSION_KEY, serialized)
+        console.debug('Retrieved state from persistent storage')
+        return persisted
       }
-      
-      return persisted
+
+      return null
     } catch (error) {
       console.error('Failed to get session:', error as Error)
       return null
@@ -80,20 +115,17 @@ class OnboardingStorage extends AbstractStorage {
       const clonedState = cloneDeep(state)
       const serializedState = this.serializeState(clonedState)
       
-      // Update both storages in parallel
-      await Promise.all([
-        this.set(STORAGE_KEY, clonedState),
-        this.sessionCache && 
-          Promise.resolve(
-            this.sessionCache.setItem(SESSION_KEY, serializedState)
-          )
-      ])
+      // First update session cache for immediate access
+      if (this.sessionCache) {
+        this.sessionCache.setItem(SESSION_KEY, serializedState)
+      }
+      
+      // Then update persistent storage
+      await this.set(STORAGE_KEY, clonedState)
 
-      // console.info('Session state updated', clonedState)
+      console.debug('Session state updated successfully')
     } catch (error) {
-      console.error('Failed to set session:', error as Error, {
-        state: JSON.stringify(state, null, 2)
-      })
+      console.error('Failed to set session:', error as Error)
       throw error
     }
   }

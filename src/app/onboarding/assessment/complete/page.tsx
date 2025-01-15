@@ -22,6 +22,7 @@ export default function AssessmentCompletePage() {
   const { currentPath, isLoading: isPathLoading } = useAppSelector((state) => state.learning)
 
   useEffect(() => {
+    console.log('assessmentId', assessmentId)
     if (!results && assessmentId) {
       dispatch(completeAssessment())
     }

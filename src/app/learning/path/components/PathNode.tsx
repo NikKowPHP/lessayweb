@@ -15,15 +15,23 @@ interface PathNodeProps {
       currentLevel: number
       targetLevel: number
       progress: number
+      criticalPoints?: string[]
     }>
   }
 }
 
-const ProgressBar = ({ skill, progress, currentLevel, targetLevel }: {
+const ProgressBar = ({ 
+  skill, 
+  progress, 
+  currentLevel, 
+  targetLevel,
+  criticalPoints 
+}: {
   skill: SkillType
   progress: number
   currentLevel: number
   targetLevel: number
+  criticalPoints?: string[]
 }) => {
   const color = getSkillColor(skill)
   const SkillIcon = getSkillIcon(skill)
@@ -46,6 +54,26 @@ const ProgressBar = ({ skill, progress, currentLevel, targetLevel }: {
           style={{ width: `${progress * 100}%` }}
         />
       </div>
+      {criticalPoints && criticalPoints.length > 0 && (
+        <div className="mt-1">
+          <div className="text-xs text-gray-300 italic">
+            Focus areas:
+          </div>
+          <div className="flex flex-wrap gap-1 mt-1">
+            {criticalPoints.map((point) => (
+              <span 
+                key={point}
+                className={cn(
+                  "text-xs px-2 py-0.5 rounded-full",
+                  `bg-${color}-500/20 text-${color}-200`
+                )}
+              >
+                {point.replace(/_/g, ' ')}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -61,7 +89,7 @@ export const PathNode = memo(({ data }: PathNodeProps) => {
   return (
     <div className={cn(
       'px-4 py-3 rounded-lg shadow-md',
-      data.type === 'assessment' ? 'w-[300px]' : 'w-[200px]',
+      data.type === 'assessment' ? 'w-[400px]' : 'w-[200px]',
       'border-2 transition-all duration-200',
       data.status === 'locked' ? 'opacity-50' : 'hover:scale-105',
       statusColors[data.status]
@@ -78,7 +106,7 @@ export const PathNode = memo(({ data }: PathNodeProps) => {
         </h3>
         
         {data.type === 'assessment' && data.skillProgress ? (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             {Object.entries(data.skillProgress).map(([skill, progress]) => (
               <ProgressBar
                 key={skill}
@@ -86,6 +114,7 @@ export const PathNode = memo(({ data }: PathNodeProps) => {
                 progress={progress.progress}
                 currentLevel={progress.currentLevel}
                 targetLevel={progress.targetLevel}
+                criticalPoints={progress.criticalPoints}
               />
             ))}
           </div>

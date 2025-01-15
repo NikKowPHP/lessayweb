@@ -77,7 +77,7 @@ export function generatePathElements(path: LearningPath) {
   yPosition += 300
 
   // Helper function to find the full item data
-  const findItemData = (id: string, type: 'exercise' | 'challenge'): Exercise | Challenge | undefined => {
+  const findItemData = (id: string, type: 'exercise' | 'challenge' | 'assessment'): Exercise | Challenge | Assessment | undefined => {
     if (type === 'exercise') {
       return [...path.exercises.critical, ...path.exercises.recommended, ...path.exercises.practice]
         .find(ex => ex.id === id)
@@ -112,7 +112,7 @@ export function generatePathElements(path: LearningPath) {
   // Create nodes and edges
   sortedNodes.forEach(([nodeId, pathNode]) => {
     // Find the full item data
-    const fullItem = findItemData(nodeId, pathNode.type as 'exercise' | 'challenge')
+    const fullItem = findItemData(nodeId, pathNode.type as 'exercise' | 'challenge' | 'assessment')
     
     if (!fullItem) {
       console.error(`Could not find data for node ${nodeId}`)
@@ -128,7 +128,7 @@ export function generatePathElements(path: LearningPath) {
         label: fullItem.title,
         type: pathNode.type,
         status: fullItem.status,
-        skills: getSkills(fullItem),
+        skills: getSkills(fullItem as Exercise | Challenge),
         item: fullItem,
         difficulty: fullItem.difficulty,
         description: fullItem.description

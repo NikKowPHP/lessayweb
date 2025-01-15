@@ -1,95 +1,63 @@
-import { Exercise, SkillType } from '@/lib/types/learningPath'
-import { Badge } from '@/components/ui/Badge'
+import { SkillType } from '@/lib/types/learningPath'
 import { Card } from '@/components/ui/Card'
-import { BookmarkIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline'
-import { getSkillColor } from '@/lib/utils/skillColors'
+import { getSkillColor, getSkillIcon } from '@/lib/utils/skillColors'
+import { Tooltip } from '@/components/ui/Tooltip'
 
-interface ExerciseCardProps {
-  exercise: Exercise
-  isBookmarked: boolean
-  isActive: boolean
-  onSelect: () => void
-  onBookmark: () => void
+interface SkillProgressProps {
+  skill: SkillType
+  currentLevel: number
+  targetLevel: number
+  criticalPoints: string[]
 }
 
-export function ExerciseCard({
-  exercise,
-  isBookmarked,
-  isActive,
-  onSelect,
-  onBookmark
-}: ExerciseCardProps) {
-  const skillColor = getSkillColor(exercise.type)
-  
+export function SkillProgress({
+  skill,
+  currentLevel,
+  targetLevel,
+  criticalPoints
+}: SkillProgressProps) {
+  const SkillIcon = getSkillIcon(skill)
+  const skillColor = getSkillColor(skill)
+  const progress = (currentLevel / targetLevel) * 100
+
   return (
-    <Card
-      onClick={onSelect}
-      className={`
-        relative cursor-pointer transition-all
-        hover:shadow-lg hover:scale-102
-        ${isActive ? 'ring-2 ring-primary' : ''}
-      `}
-    >
-      {/* Status indicator */}
-      <div className="absolute top-2 right-2 flex gap-2">
-        <button
-          onClick={(e) => {
-            e.stopPropagation()
-            onBookmark()
-          }}
-          className={`
-            p-1 rounded-full transition-colors
-            ${isBookmarked ? 'text-yellow-500' : 'text-gray-400'}
-            hover:text-yellow-500
-          `}
-        >
-          <BookmarkIcon className="w-5 h-5" />
-        </button>
-        {exercise.status === 'completed' && (
-          <CheckCircleIcon className="w-6 h-6 text-green-500" />
-        )}
+    <Card className="p-4">
+      <div className="flex items-center gap-3 mb-4">
+        <div className={`p-2 rounded-lg bg-${skillColor}-100 dark:bg-${skillColor}-900`}>
+          <SkillIcon className={`w-6 h-6 text-${skillColor}-600 dark:text-${skillColor}-400`} />
+        </div>
+        <div>
+          <h3 className="font-semibold capitalize">{skill}</h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {Math.round(currentLevel * 100)}% → {Math.round(targetLevel * 100)}%
+          </p>
+        </div>
       </div>
 
-      <div className="p-4">
-        <div className="flex items-start justify-between mb-3">
-          <Badge color={skillColor}>{exercise.type}</Badge>
-          <div className="flex items-center text-sm text-gray-500">
-            <ClockIcon className="w-4 h-4 mr-1" />
-            {exercise.estimatedDuration}
-          </div>
-        </div>
+      {/* Progress Bar */}
+      <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full mb-3">
+        <div
+          className={`absolute h-full bg-${skillColor}-500 rounded-full transition-all`}
+          style={{ width: `${progress}%` }}
+        />
+      </div>
 
-        <h3 className="text-lg font-semibold mb-2">{exercise.title}</h3>
-        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
-          {exercise.description}
-        </p>
-
-        {/* Focus Areas */}
+      {/* Critical Points */}
+      <div className="mt-3">
+        <h4 className="text-sm font-medium mb-2">Focus Areas:</h4>
         <div className="flex flex-wrap gap-2">
-          {exercise.focusAreas.map(area => (
-            <Badge key={area} variant="outline" size="sm">
-              {area}
-            </Badge>
+          {criticalPoints.map((point) => (
+            <Tooltip key={point} content={point}>
+              <span className={`
+                px-2 py-1 text-xs rounded-full
+                bg-${skillColor}-100 dark:bg-${skillColor}-900
+                text-${skillColor}-700 dark:text-${skillColor}-300
+              `}>
+                {point}
+              </span>
+            </Tooltip>
           ))}
         </div>
-
-        {/* Progress indicator if in progress */}
-        {exercise.metrics && (
-          <div className="mt-4">
-            <div className="flex justify-between text-sm mb-1">
-              <span>Progress</span>
-              <span>{exercise.metrics.completedAttempts} / {exercise.completionCriteria.requiredAttempts}</span>
-            </div>
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all"
-                style={{
-                  width: `${(exercise.metrics.completedAttempts / exercise.completionCriteria.requiredAttempts) * 100}%`
-                }}
-              />
-            </div>
-          </div>
-        )}
       </div>
     </Card>
   )

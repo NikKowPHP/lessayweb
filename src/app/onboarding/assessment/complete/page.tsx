@@ -15,16 +15,17 @@ export default function AssessmentCompletePage() {
     loading, 
     error, 
     finalAssessment: results,
-    languagePreferences 
+    languagePreferences,
+    assessmentId 
   } = useAppSelector((state) => state.onboarding)
   
   const { currentPath, isLoading: isPathLoading } = useAppSelector((state) => state.learning)
 
   useEffect(() => {
-    if (!results) {
+    if (!results && assessmentId) {
       dispatch(completeAssessment())
     }
-  }, [dispatch, results])
+  }, [dispatch, results, assessmentId])
 
   const handleContinue = async () => {
     try {

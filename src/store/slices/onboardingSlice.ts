@@ -96,25 +96,29 @@ export const completeAssessmentAndCreatePath = createAsyncThunk(
   'onboarding/completeAssessmentAndCreatePath',
   async (_, { dispatch, getState }) => {
     const state = getState() as RootState
-    const { finalAssessment, languagePreferences } = state.onboarding
+    const { finalAssessment, languagePreferences, assessmentId } = state.onboarding
 
-    if (!finalAssessment) {
-      // First get the final assessment if not available
-      await dispatch(completeAssessment()).unwrap()
+    let results = finalAssessment
+    
+    if (!results && assessmentId) {
+      // Get final assessment only if we have an assessmentId and no results yet
+      const assessmentResults = await onboardingService.submitFinalAssessment(assessmentId)
+      results = assessmentResults
+      // Update the state with final assessment results
+      dispatch({ 
+        type: 'onboarding/completeAssessment/fulfilled', 
+        payload: assessmentResults 
+      })
     }
 
-    // Get the updated state after completing assessment
-    const updatedState = getState() as RootState
-    const results = updatedState.onboarding.finalAssessment
-
-    if (!results) {
-      throw new Error('Failed to get assessment results')
+    if (!results || !languagePreferences) {
+      throw new Error('Missing assessment results or language preferences')
     }
 
     // Create learning path
     const response = await onboardingService.createLearningPath({
       assessmentId: results.assessment_id,
-      languagePreferences: updatedState.onboarding.languagePreferences!
+      languagePreferences: languagePreferences
     })
 
     // Dispatch actions to update learning state
@@ -122,9 +126,6 @@ export const completeAssessmentAndCreatePath = createAsyncThunk(
       path: response,
       assessmentResults: results
     }))
-
-    // Reset onboarding state
-    dispatch(resetOnboarding())
 
     return response
   }

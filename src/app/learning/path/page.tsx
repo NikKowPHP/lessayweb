@@ -19,6 +19,7 @@ import { ProgressOverview } from './components/ProgressOverview'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { Section } from '@/components/ui/Section'
+import { SkillType } from '@/lib/types/learningPath'
 
 export default function LearningPathPage() {
   const dispatch = useAppDispatch()
@@ -32,7 +33,7 @@ export default function LearningPathPage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <LoadingSpinner size="lg" />
+        <LoadingSpinner size="large" />
       </div>
     )
   }

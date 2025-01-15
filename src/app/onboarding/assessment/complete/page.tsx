@@ -16,17 +16,25 @@ export default function AssessmentCompletePage() {
     error, 
     finalAssessment: results,
     languagePreferences,
-    assessmentId 
+    currentStep 
   } = useAppSelector((state) => state.onboarding)
-  
+
   const { currentPath, isLoading: isPathLoading } = useAppSelector((state) => state.learning)
 
   useEffect(() => {
-    console.log('assessmentId', assessmentId)
-    if (!results && assessmentId) {
-      dispatch(completeAssessment())
+    const fetchResults = async () => {
+      // Only dispatch if we don't have results and aren't already complete
+      if (!results && currentStep !== 'complete') {
+        try {
+          await dispatch(completeAssessment()).unwrap()
+        } catch (error) {
+          console.error('Failed to complete assessment:', error)
+        }
+      }
     }
-  }, [dispatch, results, assessmentId])
+
+    fetchResults()
+  }, [dispatch, results, currentStep]) // Remove assessmentId from dependencies
 
   const handleContinue = async () => {
     try {

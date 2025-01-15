@@ -289,13 +289,29 @@ export const completeAssessment = createAsyncThunk(
   'onboarding/completeAssessment',
   async (_, { getState }) => {
     const state = getState() as RootState
-    const { assessmentId } = state.onboarding
+    
+    // If we already have results, return them
+    if (state.onboarding.finalAssessment) {
+      return state.onboarding.finalAssessment
+    }
+
+    // Use mock assessment ID for development
+    const assessmentId = process.env.NODE_ENV === 'development' ? 'mock_123' : state.onboarding.assessmentId
 
     if (!assessmentId) {
       throw new Error('No assessment ID found')
     }
 
+    console.log('assessmentId', assessmentId)
+
     return await onboardingService.submitFinalAssessment(assessmentId)
+  },
+  {
+    // Add condition to prevent multiple calls
+    condition: (_, { getState }) => {
+      const state = getState() as RootState
+      return !state.onboarding.loading && state.onboarding.currentStep !== 'complete'
+    }
   }
 )
 
@@ -485,6 +501,7 @@ const onboardingSlice = createSlice({
       .addCase(completeAssessment.fulfilled, (state, action) => {
         state.loading = false
         state.finalAssessment = action.payload
+        state.currentStep = OnboardingStep.Complete
       })
       .addCase(completeAssessment.rejected, (state, action) => {
         state.loading = false

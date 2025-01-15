@@ -11,7 +11,7 @@ import type {
 } from '@/lib/models/responses/prompts/PromptResponses'
 import {  LanguagePreferenceRequest, LanguagePreferences, LanguagePreferencesResponse } from '@/lib/models/languages/LanguagePreferencesModel'
 import { ComprehensionAssessmentRequest, GrammarAssessmentRequest, PronunciationAssessmentRequest, VocabularyAssessmentRequest } from '@/lib/models/requests/assessments/AssessmentRequests'
-import { AssessmentOrder, initialOnboardingState, OnboardingState, } from '../types/onboardingTypes'
+import { AssessmentOrder, initialOnboardingState, OnboardingState, OnboardingStep, } from '../types/onboardingTypes'
 import { AssessmentType } from '../types/onboardingTypes'
 // import { logger } from '../utils/logger'
 import { languagePreferencesStorage } from './languagePreferencesStorage'
@@ -254,9 +254,48 @@ class OnboardingService {
 
   async submitFinalAssessment(assessmentId: string) {
     try {
-      const response = await this.api.submitFinalAssessment(assessmentId)
-      return response.data
+      // Check if we already have final results in storage
+      const session = await this.storage.getSession()
+      if (session?.finalAssessment) {
+        console.info('Using cached final assessment results')
+        return session.finalAssessment
+      }
+
+      // Add a submission lock to prevent multiple calls
+      if (this.submissionQueue.has('final_assessment')) {
+        console.info('Final assessment submission already in progress')
+        return await this.submissionQueue.get('final_assessment')
+      }
+
+      console.info('Submitting final assessment', { assessmentId })
+      
+      const submissionPromise = (async () => {
+        try {
+          const response = await this.api.submitFinalAssessment(assessmentId)
+          
+          // Cache the results
+          if (session) {
+            await this.storage.setSession({
+              ...session,
+              finalAssessment: response.data,
+              currentStep: OnboardingStep.Complete // Add this to mark completion
+            })
+          }
+          console.log('final assessmentresponse.data', response)
+
+          return response
+        } finally {
+          // Clear the lock
+          this.submissionQueue.delete('final_assessment')
+        }
+      })()
+
+      // Set the lock
+      this.submissionQueue.set('final_assessment', submissionPromise)
+      
+      return await submissionPromise
     } catch (error) {
+      console.error('Failed to submit final assessment:', error)
       throw new Error('Failed to submit assessment')
     }
   }

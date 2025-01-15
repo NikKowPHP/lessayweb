@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppDispatch, useAppSelector } from '@/store/hooks'
 import { completeAssessment, completeAssessmentAndCreatePath } from '@/store/slices/onboardingSlice'
@@ -36,17 +36,16 @@ export default function AssessmentCompletePage() {
     fetchResults()
   }, [dispatch, results, currentStep]) // Remove assessmentId from dependencies
 
-  const handleContinue = async () => {
+  const handleContinue = useCallback(async () => {
     try {
-      if (!currentPath) {
-        await dispatch(completeAssessmentAndCreatePath()).unwrap()
-      }
+      await dispatch(completeAssessmentAndCreatePath()).unwrap()
+      // Handle success - maybe redirect to the next page
       router.push('/learning/path')
     } catch (error) {
-      console.error('Failed to create learning path:', error)
+      console.error('Failed to complete assessment:', error)
+      // Handle error - show error message to user
     }
-  }
-
+  }, [dispatch])
   if (loading || !results) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center space-y-4">

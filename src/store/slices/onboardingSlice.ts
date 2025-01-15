@@ -150,11 +150,10 @@ export const completeAssessmentAndCreatePath = createAsyncThunk(
         assessmentResults: finalAssessment
       }))
 
-      // Update onboarding state
-      state.onboarding.currentStep = OnboardingStep.Complete
 
       return {
-        success: true
+        success: true,
+        learningPath
       }
     } catch (error) {
       console.error('Failed to create learning path:', error)
@@ -374,6 +373,9 @@ const onboardingSlice = createSlice({
     setSubmissionStatus: (state, action: PayloadAction<SubmissionStatus>) => {
       state.submissionStatus[action.payload.type] = action.payload
     },
+    completeOnboarding: (state) => {
+      state.currentStep = OnboardingStep.Complete
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -478,7 +480,10 @@ const onboardingSlice = createSlice({
         state.loading = true
         state.error = null
       })
-     
+      .addCase(completeAssessmentAndCreatePath.fulfilled, (state) => {
+        state.loading = false
+        state.currentStep = OnboardingStep.Complete // Move the state update here
+      })
       .addCase(completeAssessmentAndCreatePath.rejected, (state, action) => {
         state.loading = false
         state.error = action.error.message || 'Failed to create learning path'
@@ -528,6 +533,7 @@ export const {
   resetOnboarding,
   updatePrompts,
   setSubmissionStatus,
+  completeOnboarding
 } = onboardingSlice.actions
 
 export default onboardingSlice.reducer

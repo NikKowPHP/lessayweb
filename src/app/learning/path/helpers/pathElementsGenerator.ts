@@ -24,13 +24,22 @@ export function generatePathElements(path: LearningPath) {
   let yPosition = 0
   const centerX = 400
 
-  // Helper function to get skills array from an item
+  // Helper function to find the full item data
+  const findItemData = (id: string, type: 'exercise' | 'challenge'): Exercise | Challenge | undefined => {
+    if (type === 'exercise') {
+      return [...path.exercises.critical, ...path.exercises.recommended, ...path.exercises.practice]
+        .find(ex => ex.id === id)
+    } else {
+      return [...path.challenges.current, ...path.challenges.upcoming]
+        .find(ch => ch.id === id)
+    }
+  }
+
+  // Helper function to get skills array
   const getSkills = (item: Exercise | Challenge): SkillType[] => {
     if ('type' in item && !('skills' in item)) {
-      // It's an Exercise
       return [item.type]
     } else {
-      // It's a Challenge
       return (item as Challenge).skills
     }
   }
@@ -49,28 +58,33 @@ export function generatePathElements(path: LearningPath) {
   })
 
   // Create nodes and edges
-  sortedNodes.forEach(([nodeId, pathNode], index) => {
-    const item = pathNode.data
-    console.log('item', item)
+  sortedNodes.forEach(([nodeId, pathNode]) => {
+    // Find the full item data
+    const fullItem = findItemData(nodeId, pathNode.type)
     
+    if (!fullItem) {
+      console.error(`Could not find data for node ${nodeId}`)
+      return
+    }
+
     // Create node
     const node: Node<PathNodeData> = {
       id: nodeId,
       type: 'pathNode',
       position: { x: centerX, y: yPosition },
       data: {
-        label: item.title,
+        label: fullItem.title,
         type: pathNode.type,
-        status: item.status,
-        skills: getSkills(item),
-        item: item,
-        difficulty: item.difficulty,
-        description: item.description
+        status: fullItem.status,
+        skills: getSkills(fullItem),
+        item: fullItem,
+        difficulty: fullItem.difficulty,
+        description: fullItem.description
       }
     }
     nodes.push(node)
 
-    // Create edges based on nextNodes from progression
+    // Create edges
     pathNode.nextNodes.forEach(targetId => {
       edges.push({
         id: `e${nodeId}-${targetId}`,

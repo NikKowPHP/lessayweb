@@ -8,7 +8,7 @@ import { LucideProps } from 'lucide-react'
 interface PathNodeProps {
   data: {
     label: string
-    type: 'exercise' | 'challenge' | 'assessment'
+    type: 'exercise' | 'challenge' | 'assessment' | 'divider'
     status: 'locked' | 'available' | 'in_progress' | 'completed'
     skills: SkillType[]
     skillProgress?: Record<SkillType, {
@@ -18,6 +18,7 @@ interface PathNodeProps {
       criticalPoints?: string[]
     }>
     description?: string
+    exerciseGroup?: 'critical' | 'recommended' | 'practice'
   }
 }
 
@@ -84,8 +85,30 @@ const SkillIconWrapper = ({ icon: Icon }: { icon: React.ComponentType<LucideProp
 )
 
 export const PathNode = memo(({ data }: PathNodeProps) => {
+  const getGroupStyle = (group?: string) => {
+    switch (group) {
+      case 'critical':
+        return 'text-red-400 dark:text-red-300'
+      case 'recommended':
+        return 'text-blue-400 dark:text-blue-300'
+      case 'practice':
+        return 'text-green-400 dark:text-green-300'
+      default:
+        return ''
+    }
+  }
+
   return (
     <div className="flex flex-col gap-3">
+      {data.exerciseGroup && data.type === 'exercise' && (
+        <div className={cn(
+          "text-xs font-medium uppercase tracking-wider",
+          getGroupStyle(data.exerciseGroup)
+        )}>
+          {data.exerciseGroup}
+        </div>
+      )}
+
       <h3 className="vertical-timeline-element-title font-semibold">
         {data.label}
       </h3>

@@ -141,6 +141,18 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
     const isAvailable = isNodeAvailable(nodeId)
     const status: ExerciseStatus = isAvailable ? 'available' : 'locked'
 
+    // Determine exercise group
+    let exerciseGroup: 'critical' | 'recommended' | 'practice' | undefined
+    if (node.type === 'exercise') {
+      if (path.exercises.critical.some(ex => ex.id === nodeId)) {
+        exerciseGroup = 'critical'
+      } else if (path.exercises.recommended.some(ex => ex.id === nodeId)) {
+        exerciseGroup = 'recommended'
+      } else if (path.exercises.practice.some(ex => ex.id === nodeId)) {
+        exerciseGroup = 'practice'
+      }
+    }
+
     const skillColor = node.type === 'exercise' 
       ? getSkillColor((item as Exercise).type)
       : getSkillColor((item as Challenge).skills[0])
@@ -168,7 +180,8 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
         type: node.type,
         status,
         skills: 'skills' in item ? item.skills : [item.type],
-        description: item.description
+        description: item.description,
+        exerciseGroup
       },
       item
     })

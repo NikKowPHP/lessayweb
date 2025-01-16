@@ -19,3 +19,18 @@ body {
   background: var(--background);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Override vertical timeline icon styles */
+.vertical-timeline-element-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.vertical-timeline-element-icon svg {
+  position: static !important;
+  transform: none !important;
+  margin: 0 !important;
+  left: auto !important;
+  top: auto !important;
+}

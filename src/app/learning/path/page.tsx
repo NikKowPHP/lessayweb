@@ -58,7 +58,7 @@ function LearningPath() {
 
   return (
     <motion.div 
-      className="mt-8 pb-16"
+      className="mt-20 pb-16"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}

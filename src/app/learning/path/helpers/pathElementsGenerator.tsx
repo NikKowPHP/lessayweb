@@ -26,8 +26,19 @@ interface TimelineElement {
 }
 
 const IconWrapper = ({ icon: Icon }: { icon: React.ComponentType<LucideProps> }) => (
-  <div className="flex items-center justify-center w-full h-full">
-    <Icon size={24} />
+  <div className="flex items-center justify-center w-full h-full" style={{ transform: 'none' }}>
+    <Icon 
+      size={24} 
+      className="stroke-current !m-0 !static"
+      strokeWidth={1.5}
+      style={{ 
+        position: 'static',
+        transform: 'none',
+        margin: 0,
+        left: 'auto',
+        top: 'auto'
+      }}
+    />
   </div>
 )
 
@@ -49,6 +60,15 @@ function getIconForType(type: 'exercise' | 'challenge' | 'assessment'): ReactNod
 export function generateTimelineElements(path: LearningPath): TimelineElement[] {
   const elements: TimelineElement[] = []
 
+  const commonIconStyle: React.CSSProperties = {
+    background: '#1e293b',
+    color: '#fff',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transform: 'none'
+  }
+
   const assessmentElement: TimelineElement = {
     id: 'assessment',
     type: 'assessment',
@@ -59,10 +79,7 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
     contentArrowStyle: { 
       borderRight: '7px solid #1e293b' 
     },
-    iconStyle: { 
-      background: '#1e293b',
-      color: '#fff'
-    },
+    iconStyle: commonIconStyle,
     icon: <IconWrapper icon={ClipboardCheck} />,
     data: {
       label: 'Initial Assessment',
@@ -92,9 +109,9 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
       contentArrowStyle: { 
         borderRight: `7px solid ${skillColor}` 
       },
-      iconStyle: { 
+      iconStyle: {
+        ...commonIconStyle,
         background: skillColor,
-        color: '#fff'
       },
       icon: getIconForType(node.type),
       data: {
@@ -107,6 +124,13 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
       item: exercise
     })
   })
+  // path.exercises.critical.forEach(exercise => {
+  //   elements.push({
+  //     id: exercise.id,
+  //     type: 'exercise',
+  //     ...exercise
+  //   })
+  // })
 
   // Add challenges
   path.challenges.current.forEach(challenge => {
@@ -122,9 +146,9 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
       contentArrowStyle: { 
         borderRight: `7px solid ${skillColor}` 
       },
-      iconStyle: { 
+      iconStyle: {
+        ...commonIconStyle,
         background: skillColor,
-        color: '#fff'
       },
       icon: <IconWrapper icon={Trophy} />,
       data: {

@@ -20,10 +20,12 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { Icon } from '@iconify/react'
 import { Toast } from '@/components/ui/Toast'
+import { useRouter } from 'next/navigation'
 
 export default function PronunciationExercisePage() {
-  const { id } = useParams()
+  const { id} = useParams()
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const exercise = useAppSelector(selectCurrentExercise)
   const isProcessing = useAppSelector(selectIsProcessing)
   const videoProgress = useAppSelector(selectVideoProgress)
@@ -33,7 +35,7 @@ export default function PronunciationExercisePage() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [recordings, setRecordings] = useState<Map<number, Blob>>(new Map())
   const [isComplete, setIsComplete] = useState(false)
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' | 'error' } | null>(null)
 
   useEffect(() => {
     if (id && !exercise) {
@@ -106,7 +108,7 @@ export default function PronunciationExercisePage() {
             }
             reader.readAsDataURL(blob)
           })
-
+  
           return {
             segmentIndex,
             audioData: base64Audio,
@@ -116,19 +118,24 @@ export default function PronunciationExercisePage() {
           }
         }
       )
-
+  
       const recordingsData = await Promise.all(recordingPromises)
       
-      await dispatch(submitAllRecordings({
+      const result = await dispatch(submitAllRecordings({
         exerciseId: exercise.id,
         recordings: recordingsData
       })).unwrap()
       
-      // Clear recordings after successful submission
+      // Clear recordings and redirect to results page
       setRecordings(new Map())
       setIsComplete(false)
+      router.push(`/exercises/pronunciation/${exercise.id}/results`)
     } catch (error) {
       console.error('Failed to submit recordings:', error)
+      setToast({
+        message: 'Failed to submit recordings. Please try again.',
+        type: 'error'
+      })
     }
   }
 

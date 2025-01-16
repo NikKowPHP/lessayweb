@@ -7,6 +7,10 @@ import {
 
 const CURRENT_EXERCISE_KEY = 'current_exercise'
 const EXERCISE_RESULT_KEY = 'exercise_result'
+const EXERCISES_CACHE_KEY = 'exercises_cache'
+const CACHE_TIMESTAMP_KEY = 'exercises_cache_timestamp'
+
+const CACHE_DURATION = 1000 * 60 * 30 // 30 minutes
 
 export class ExercisingStorage extends AbstractStorage {
   private static instance: ExercisingStorage
@@ -52,6 +56,31 @@ export class ExercisingStorage extends AbstractStorage {
     await Promise.all([
       this.remove(CURRENT_EXERCISE_KEY),
       this.remove(EXERCISE_RESULT_KEY)
+    ])
+  }
+
+  async getCachedExercises(): Promise<{
+    exercises: PronunciationExercise[] | null,
+    timestamp: number | null
+  }> {
+    const [exercises, timestamp] = await Promise.all([
+      this.get<PronunciationExercise[]>(EXERCISES_CACHE_KEY),
+      this.get<number>(CACHE_TIMESTAMP_KEY)
+    ])
+    return { exercises, timestamp }
+  }
+
+  async cacheExercises(exercises: PronunciationExercise[]): Promise<void> {
+    await Promise.all([
+      this.set(EXERCISES_CACHE_KEY, exercises),
+      this.set(CACHE_TIMESTAMP_KEY, Date.now())
+    ])
+  }
+
+  async clearExercisesCache(): Promise<void> {
+    await Promise.all([
+      this.remove(EXERCISES_CACHE_KEY),
+      this.remove(CACHE_TIMESTAMP_KEY)
     ])
   }
 }

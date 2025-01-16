@@ -6,6 +6,7 @@ import {
 } from '@/lib/types/exercises'
 import type { RootState } from '@/store'
 import { exercisingService } from '@/lib/services/exercisingService'
+import { exercisingStorage } from '@/lib/services/exercisingStorage'
 
 export interface ExercisingState {
   currentExercise: PronunciationExercise | null
@@ -19,6 +20,8 @@ export interface ExercisingState {
     currentTime: number
     isPlaying: boolean
   }
+  availableExercises: PronunciationExercise[]
+  sessionLoaded: boolean
 }
 
 const initialState: ExercisingState = {
@@ -32,10 +35,33 @@ const initialState: ExercisingState = {
     hasWatched: false,
     currentTime: 0,
     isPlaying: false
-  }
+  },
+  availableExercises: [],
+  sessionLoaded: false
 }
 
-// Async thunks
+// Async Thunks
+export const rehydrateExercisingState = createAsyncThunk(
+  'exercising/rehydrate',
+  async () => {
+    const [storedState, exercises] = await Promise.all([
+      exercisingService.getStoredState(),
+      exercisingService.getExercisesList()
+    ])
+    return {
+      storedState,
+      exercises
+    }
+  }
+)
+
+export const getExercisesList = createAsyncThunk(
+  'exercising/getExercisesList',
+  async () => {
+    return await exercisingService.getExercisesList()
+  }
+)
+
 export const startExercise = createAsyncThunk(
   'exercising/startExercise',
   async (exerciseId: string) => {
@@ -47,6 +73,14 @@ export const submitRecording = createAsyncThunk(
   'exercising/submitRecording',
   async (recording: RecordingAttempt) => {
     return await exercisingService.submitRecording(recording)
+  }
+)
+
+export const invalidateExercisesCache = createAsyncThunk(
+  'exercising/invalidateCache',
+  async (_, { dispatch }) => {
+    await exercisingService.invalidateExercisesCache()
+    return dispatch(getExercisesList())
   }
 )
 
@@ -76,6 +110,29 @@ const exercisingSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(rehydrateExercisingState.fulfilled, (state, action) => {
+        const { storedState, exercises } = action.payload
+        if (storedState.currentExercise) {
+          state.currentExercise = storedState.currentExercise
+        }
+        if (storedState.results) {
+          state.results = storedState.results
+        }
+        state.availableExercises = exercises
+        state.sessionLoaded = true
+      })
+      .addCase(getExercisesList.pending, (state) => {
+        state.isProcessing = true
+        state.error = null
+      })
+      .addCase(getExercisesList.fulfilled, (state, action) => {
+        state.availableExercises = action.payload
+        state.isProcessing = false
+      })
+      .addCase(getExercisesList.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to get exercises'
+        state.isProcessing = false
+      })
       .addCase(startExercise.pending, (state) => {
         state.isProcessing = true
         state.error = null
@@ -110,6 +167,10 @@ export const selectResults = (state: RootState) => state.exercising.results
 export const selectVideoProgress = (state: RootState) => state.exercising.videoProgress
 export const selectIsProcessing = (state: RootState) => state.exercising.isProcessing
 export const selectError = (state: RootState) => state.exercising.error
+export const selectAvailableExercises = (state: RootState) => 
+  state.exercising.availableExercises
+export const selectSessionLoaded = (state: RootState) => 
+  state.exercising.sessionLoaded
 
 export const {
   setVideoProgress,

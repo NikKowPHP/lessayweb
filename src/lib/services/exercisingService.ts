@@ -144,6 +144,64 @@ export class ExercisingService {
   async clearExerciseSession(): Promise<void> {
     await exercisingStorage.clearExerciseSession()
   }
+
+  async getStoredState() {
+    const [currentExercise, results] = await Promise.all([
+      this.getCurrentExercise(),
+      this.getExerciseResult()
+    ])
+    return { currentExercise, results }
+  }
+
+  async setStoredState(state: {
+    currentExercise: PronunciationExercise | null
+    results: PronunciationExerciseResult | null
+  }) {
+    await Promise.all([
+      exercisingStorage.setCurrentExercise(state.currentExercise),
+      exercisingStorage.setExerciseResult(state.results)
+    ])
+  }
+
+  async getExercisesList(): Promise<PronunciationExercise[]> {
+    try {
+      // Check cache first
+      const { exercises, timestamp } = await exercisingStorage.getCachedExercises()
+      const cacheAge = timestamp ? Date.now() - timestamp : Infinity
+
+      // Use cache if available and fresh
+      if (exercises && cacheAge < CACHE_DURATION) {
+        console.info('Using cached exercises list')
+        return exercises
+      }
+
+      // Fetch fresh data
+      console.info('Fetching fresh exercises list')
+      const response = await this.api.getExercisesList()
+      const freshExercises = response.data
+
+      // Update cache in background
+      exercisingStorage.cacheExercises(freshExercises).catch(error => {
+        console.warn('Failed to cache exercises', error)
+      })
+
+      return freshExercises
+    } catch (error) {
+      // If fetch fails and we have cached data, use it as fallback
+      const { exercises } = await exercisingStorage.getCachedExercises()
+      if (exercises) {
+        console.warn('Using stale cache due to fetch failure')
+        return exercises
+      }
+
+      console.error('Failed to get exercises list', error)
+      throw new Error('Failed to get exercises list')
+    }
+  }
+
+  async invalidateExercisesCache(): Promise<void> {
+    await exercisingStorage.clearExercisesCache()
+  }
 }
 
 // Export singleton instance

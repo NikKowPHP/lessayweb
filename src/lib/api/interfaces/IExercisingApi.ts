@@ -29,4 +29,9 @@ export interface IExercisingApi {
   getExerciseProgress(exerciseId: string): Promise<{
     data: ExerciseProgressData
   }>
+
+  // Get available exercises
+  getExercisesList(): Promise<{ 
+    data: PronunciationExercise[] 
+  }>
 } 

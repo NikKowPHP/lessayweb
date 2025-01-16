@@ -110,7 +110,7 @@ export const PathNode = memo(({ data }: PathNodeProps) => {
         </div>
       ) : (
         <div className="flex flex-wrap gap-1 mt-2">
-          {data.skills.map(skill => {
+          {data.skills && data.skills.map(skill => {
             const Icon = getSkillIcon(skill)
             return (
               <Badge

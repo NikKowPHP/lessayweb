@@ -85,7 +85,8 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
     type: 'assessment',
     contentStyle: { 
       background: '#1e293b',
-      color: '#fff'
+      color: '#fff',
+      marginBottom: '3rem'
     },
     contentArrowStyle: { 
       borderRight: '7px solid #1e293b' 
@@ -182,6 +183,53 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
   // Add remaining nodes in progression
   Object.keys(path.progression.nodes).forEach(nodeId => {
     addNodeToTimeline(nodeId)
+  })
+
+  // Add section divider after exercises
+  elements.push({
+    id: 'exercise-divider',
+    type: 'exercise',
+    contentStyle: { 
+      background: 'transparent',
+      marginBottom: '3rem'
+    },
+    contentArrowStyle: { 
+      borderRight: 'none' 
+    },
+    iconStyle: {
+      display: 'none'
+    },
+    icon: null,
+    data: {
+      label: '',
+      type: 'divider'
+    }
+  })
+
+  // Add disclaimer at the bottom
+  elements.push({
+    id: 'disclaimer',
+    type: 'assessment',
+    contentStyle: { 
+      background: 'transparent',
+      color: '#64748b', // slate-500
+      fontSize: '0.875rem',
+      fontStyle: 'italic',
+      marginTop: '2rem',
+      textAlign: 'center',
+      padding: '1rem'
+    },
+    contentArrowStyle: { 
+      borderRight: 'none' 
+    },
+    iconStyle: {
+      display: 'none'
+    },
+    icon: null,
+    data: {
+      label: 'While we may not know your exact path to your target level, we do know your next steps to get there.',
+      type: 'disclaimer'
+    }
   })
 
   return elements

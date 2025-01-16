@@ -1,19 +1,21 @@
 'use client'
 
 import { useState } from 'react'
-import { PracticeMaterial, PracticeSegment } from '@/lib/types/exercises'
+import { PracticeMaterial, PracticeSegment, RecordingAttempt } from '@/lib/types/exercises'
 import { Icon } from '@iconify/react'
 
 interface PracticeSectionProps {
   material: PracticeMaterial
   currentSegment: number
   onSegmentChange: (index: number) => void
+  recordings: Map<number, Blob>
 }
 
 export function PracticeSection({
   material,
   currentSegment,
   onSegmentChange,
+  recordings
 }: PracticeSectionProps) {
   const [showPhonetics, setShowPhonetics] = useState(
     material.displayOptions?.showPhonetics ?? true
@@ -65,7 +67,7 @@ export function PracticeSection({
         <p className="text-gray-700">{material.text}</p>
       </div>
 
-      {/* Segments */}
+      {/* Segments with recording status */}
       <div className="space-y-4">
         {material.segments.map((segment, index) => (
           <div
@@ -77,19 +79,36 @@ export function PracticeSection({
             }`}
             onClick={() => onSegmentChange(index)}
           >
-            <div className="space-y-2">
-              <p className="text-lg text-gray-900">{segment.text}</p>
-              {showPhonetics && (
-                <p className="font-mono text-sm text-gray-600">
-                  {segment.phonetic}
-                </p>
-              )}
-              {showTranslation && segment.translation && (
-                <p className="text-sm text-gray-600">{segment.translation}</p>
-              )}
-              {showNotes && segment.notes && (
-                <p className="text-sm text-gray-500">{segment.notes}</p>
-              )}
+            <div className="flex items-center justify-between">
+              <div className="space-y-2">
+                <p className="text-lg text-gray-900">{segment.text}</p>
+                {showPhonetics && (
+                  <p className="font-mono text-sm text-gray-600">
+                    {segment.phonetic}
+                  </p>
+                )}
+                {showTranslation && segment.translation && (
+                  <p className="text-sm text-gray-600">{segment.translation}</p>
+                )}
+                {showNotes && segment.notes && (
+                  <p className="text-sm text-gray-500">{segment.notes}</p>
+                )}
+              </div>
+              
+              {/* Recording status indicator */}
+              <div className="ml-4 flex items-center space-x-2">
+                {recordings.has(index) ? (
+                  <span className="flex items-center text-green-600">
+                    <Icon icon="mdi:check-circle" className="mr-1 h-5 w-5" />
+                    Recorded
+                  </span>
+                ) : (
+                  <span className="flex items-center text-gray-400">
+                    <Icon icon="mdi:microphone-off" className="mr-1 h-5 w-5" />
+                    Not recorded
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         ))}

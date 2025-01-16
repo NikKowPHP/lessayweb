@@ -13,7 +13,8 @@ interface RecordingSectionProps {
     allowSegmentRecording?: boolean
   }
   onSubmit: (recording: Blob) => Promise<void>
-  currentSegment?: number
+  currentSegment: number
+  hasRecording: boolean
 }
 
 export function RecordingSection({
@@ -21,6 +22,7 @@ export function RecordingSection({
   settings,
   onSubmit,
   currentSegment,
+  hasRecording
 }: RecordingSectionProps) {
   const dispatch = useAppDispatch()
   const isRecording = useAppSelector(selectIsRecording)
@@ -80,69 +82,81 @@ export function RecordingSection({
   }
 
   return (
-    <section className="mt-8">
-      <div className="rounded-lg bg-gray-50 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">
-              {isRecording ? 'Recording...' : 'Ready to Record'}
-            </h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {settings.allowSegmentRecording && currentSegment !== undefined
-                ? `Recording segment ${currentSegment + 1}`
-                : 'Recording full practice text'}
-            </p>
-          </div>
-
-          {/* Recording controls */}
-          <div className="flex items-center space-x-4">
-            <div className="text-sm text-gray-500">
-              {duration}s / {settings.maxRecordingDuration}s
-            </div>
-            <button
-              onClick={isRecording ? stopRecording : startRecording}
-              className={`rounded-full p-4 ${
-                isRecording
-                  ? 'bg-red-100 text-red-600 hover:bg-red-200'
-                  : 'bg-primary text-white hover:bg-primary-dark'
-              }`}
-            >
-              <Icon
-                icon={isRecording ? 'mdi:stop' : 'mdi:microphone'}
-                className="h-6 w-6"
-              />
-            </button>
-          </div>
+    <div className="space-y-4 rounded-lg bg-gray-50 p-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium text-gray-900">
+            {isRecording ? 'Recording...' : 'Record Segment'}
+          </h3>
+          <p className="mt-1 text-sm text-gray-500">
+            Segment {currentSegment + 1}
+            {hasRecording && ' (Already recorded)'}
+          </p>
         </div>
 
-        {/* Error message */}
-        {error && (
-          <div className="mt-4 rounded-md bg-red-50 p-4">
-            <div className="flex">
-              <Icon icon="mdi:alert" className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <p className="text-sm text-red-700">{error}</p>
-              </div>
-            </div>
+        {/* Recording controls */}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">
+            {duration}s / {settings.maxRecordingDuration}s
           </div>
-        )}
-
-        {/* Recording guidelines */}
-        <div className="mt-4 text-sm text-gray-500">
-          <ul className="list-inside list-disc space-y-1">
-            <li>Speak clearly and at a natural pace</li>
-            <li>
-              Minimum duration: {settings.minRecordingDuration} seconds
-            </li>
-            <li>
-              Maximum duration: {settings.maxRecordingDuration} seconds
-            </li>
-            {settings.allowSegmentRecording && (
-              <li>You can record each segment separately</li>
-            )}
-          </ul>
+          <button
+            onClick={isRecording ? stopRecording : startRecording}
+            disabled={isRecording && duration < settings.minRecordingDuration}
+            className={`rounded-full p-4 ${
+              isRecording
+                ? 'bg-red-100 text-red-600 hover:bg-red-200'
+                : hasRecording
+                ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200'
+                : 'bg-primary text-white hover:bg-primary-dark'
+            }`}
+          >
+            <Icon
+              icon={
+                isRecording 
+                  ? 'mdi:stop' 
+                  : hasRecording 
+                  ? 'mdi:microphone-refresh'
+                  : 'mdi:microphone'
+              }
+              className="h-6 w-6"
+            />
+          </button>
         </div>
       </div>
-    </section>
+
+      {/* Recording status */}
+      {hasRecording && !isRecording && (
+        <div className="mt-2 rounded-md bg-yellow-50 p-3">
+          <div className="flex">
+            <Icon icon="mdi:information" className="h-5 w-5 text-yellow-400" />
+            <p className="ml-2 text-sm text-yellow-700">
+              This segment has already been recorded. Recording again will replace the previous recording.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error message */}
+      {error && (
+        <div className="mt-2 rounded-md bg-red-50 p-3">
+          <div className="flex">
+            <Icon icon="mdi:alert" className="h-5 w-5 text-red-400" />
+            <p className="ml-2 text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Recording guidelines */}
+      <div className="mt-4">
+        <h4 className="text-sm font-medium text-gray-700">Guidelines</h4>
+        <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-gray-500">
+          <li>Speak clearly and at a natural pace</li>
+          <li>Minimum duration: {settings.minRecordingDuration} seconds</li>
+          <li>Maximum duration: {settings.maxRecordingDuration} seconds</li>
+          <li>Record each segment separately</li>
+          <li>You can re-record any segment before final submission</li>
+        </ul>
+      </div>
+    </div>
   )
 }

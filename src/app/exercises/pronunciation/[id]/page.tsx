@@ -19,6 +19,7 @@ import { RecordingSection } from '@/components/exercises/RecordingSection'
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { Icon } from '@iconify/react'
+import { Toast } from '@/components/ui/Toast'
 
 export default function PronunciationExercisePage() {
   const { id } = useParams()
@@ -32,6 +33,7 @@ export default function PronunciationExercisePage() {
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
   const [recordings, setRecordings] = useState<Map<number, Blob>>(new Map())
   const [isComplete, setIsComplete] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'info' } | null>(null)
 
   useEffect(() => {
     if (id && !exercise) {
@@ -66,11 +68,30 @@ export default function PronunciationExercisePage() {
   const handleSegmentRecording = async (segmentIndex: number, recording: Blob) => {
     setRecordings(prev => new Map(prev).set(segmentIndex, recording))
     
-    // Check if all segments are recorded
     const allSegmentsRecorded = exercise.practiceMaterial.segments.every(
-      (_, index) => recordings.has(index)
+      (_, index) => recordings.has(index) || index === segmentIndex
     )
     setIsComplete(allSegmentsRecorded)
+
+    // Advance to next segment if available
+    const nextSegment = segmentIndex + 1
+    if (nextSegment < exercise.practiceMaterial.segments.length) {
+      setCurrentSegment(nextSegment)
+      setToast({
+        message: `Recording saved! Moving to segment ${nextSegment + 1}`,
+        type: 'success'
+      })
+    } else if (allSegmentsRecorded) {
+      setToast({
+        message: 'All segments recorded! You can now submit your practice.',
+        type: 'info'
+      })
+      const submitButton = document.querySelector('#submit-all-button')
+      submitButton?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+
+    // Clear toast after 3 seconds
+    setTimeout(() => setToast(null), 3000)
   }
 
   const handleSubmitAll = async () => {
@@ -112,7 +133,7 @@ export default function PronunciationExercisePage() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 relative">
       {/* Exercise Header */}
       <div className="rounded-lg bg-white p-6 shadow-sm">
         <div className="flex items-center justify-between">
@@ -234,6 +255,7 @@ export default function PronunciationExercisePage() {
 
               {/* Submit all button */}
               <button
+                id="submit-all-button"
                 onClick={handleSubmitAll}
                 disabled={!isComplete}
                 className={`mt-4 w-full rounded-md px-4 py-2 text-white
@@ -247,6 +269,15 @@ export default function PronunciationExercisePage() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Toast notification */}
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
       )}
     </div>
   )

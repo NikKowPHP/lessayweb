@@ -151,7 +151,8 @@ export function generateTimelineElements(path: LearningPath): TimelineElement[] 
       contentStyle: { 
         background: skillColor,
         color: '#fff',
-        opacity: status === 'locked' ? 0.7 : 1
+        opacity: status === 'locked' ? 0.7 : 1,
+        marginTop: node.type === 'challenge' ? '5rem' : '0'
       },
       contentArrowStyle: { 
         borderRight: `7px solid ${skillColor}` 

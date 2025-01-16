@@ -2,7 +2,8 @@ import type {
   PronunciationExercise,
   PronunciationExerciseResult,
   RecordingAttempt,
-  VideoContent 
+  VideoContent,
+  ExerciseProgressData
 } from '@/lib/types/exercises'
 
 export interface IExercisingApi {
@@ -24,13 +25,8 @@ export interface IExercisingApi {
     data: PronunciationExerciseResult 
   }>
 
-  // Progress tracking
+  // Progress tracking with detailed metrics
   getExerciseProgress(exerciseId: string): Promise<{
-    data: {
-      completed: boolean
-      attempts: number
-      bestScore: number
-      lastAttempt: string | null
-    }
+    data: ExerciseProgressData
   }>
 } 

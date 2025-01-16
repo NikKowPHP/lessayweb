@@ -1,120 +1,62 @@
 import { SkillType, DifficultyLevel, ExerciseStatus } from './learningPath'
 
-// Model response from the backend
-export interface PronunciationModelData {
-  audioUrl: string
-  phonemes: Array<{
-    symbol: string
-    sound: string
-    examples: string[]
-  }>
-  stressPatterns: Array<{
-    pattern: string
-    example: string
-  }>
-  intonation: {
-    pattern: 'rising' | 'falling' | 'rise-fall' | 'fall-rise'
-    description: string
-  }
-}
+// Types of focus areas in pronunciation exercises
+export type PronunciationFocusArea = 'phoneme' | 'stress' | 'intonation'
 
-// Video content data
+// Video content data - main learning material
 export interface VideoContent {
   videoId: string
-  startTime?: number
-  endTime?: number
   title: string
   transcript: string
   highlights: Array<{
     timestamp: number
     text: string
-    focus: 'phoneme' | 'stress' | 'intonation'
+    focus: PronunciationFocusArea
   }>
 }
 
-// Practice text sections
-export interface PracticeMaterial {
+// Practice text segment with phonetic transcription
+export interface PracticeSegment {
   text: string
-  segments: Array<{
-    text: string
-    phonetic: string
-    audioUrl?: string
-    focus: 'phoneme' | 'stress' | 'intonation'
-  }>
+  phonetic: string
+  focus: PronunciationFocusArea
+  // Optional metadata for UI display
+  translation?: string
+  notes?: string
+}
+
+// Practice text provided by backend
+export interface PracticeMaterial {
+  text: string // Complete practice text
+  segments: PracticeSegment[]
+  // Optional display settings
+  displayOptions?: {
+    showPhonetics: boolean
+    showTranslation: boolean
+    showNotes: boolean
+  }
 }
 
 // User's recording attempt
 export interface RecordingAttempt {
   timestamp: string
-  audioUrl: string
+  audioBlob: Blob // Raw audio data to send to backend
   duration: number
-  scores: {
-    accuracy: number
-    fluency: number
-    pronunciation: number
-    overall: number
-  }
-  feedback: Array<{
-    timestamp: number
-    type: 'phoneme' | 'stress' | 'intonation'
-    issue: string
-    suggestion: string
-    severity: 'low' | 'medium' | 'high'
-  }>
+  exerciseId: string
+  segmentIndex?: number // Optional: for segment-specific recording
 }
 
-// Main pronunciation exercise type
-export interface PronunciationExercise {
-  id: string
-  type: Extract<SkillType, 'pronunciation'>
-  status: ExerciseStatus
-  difficulty: DifficultyLevel
-  title: string
-  description: string
-  
-  // Exercise content
-  video: VideoContent
-  practiceMaterial: PracticeMaterial
-  modelData: PronunciationModelData
-  
-  // Exercise settings
-  settings: {
-    minRecordingDuration: number
-    maxRecordingDuration: number
-    attemptsAllowed: number
-    passingScore: number
-  }
-
-  // Progress tracking
-  progress?: {
-    attempts: RecordingAttempt[]
-    bestScore: number
-    lastAttemptAt: string
-    completed: boolean
-  }
-
-  // Exercise requirements
-  requirements: {
-    minAccuracy: number
-    minAttempts: number
-    focusAreas: Array<'phoneme' | 'stress' | 'intonation'>
-  }
-
-  // Exercise metadata
-  estimatedDuration: string
-  focusAreas: string[]
-  prerequisites: string[]
-  
-  // Optional metrics if exercise is completed
-  metrics?: {
-    accuracy: number
-    completedAttempts: number
-    timeSpent: string
-    bestRecording?: string
-  }
+// Feedback item for specific pronunciation issue
+export interface PronunciationFeedback {
+  timestamp: number
+  type: PronunciationFocusArea
+  issue: string
+  suggestion: string
+  severity: 'low' | 'medium' | 'high'
+  segmentIndex?: number // Reference to specific practice segment
 }
 
-// Exercise result specific to pronunciation
+// Backend response for recording submission
 export interface PronunciationExerciseResult {
   exerciseId: string
   timestamp: string
@@ -126,11 +68,72 @@ export interface PronunciationExerciseResult {
     pronunciation: number
     overall: number
   }
-  feedback: Array<{
-    timestamp: number
-    type: 'phoneme' | 'stress' | 'intonation'
-    issue: string
-    suggestion: string
-    severity: 'low' | 'medium' | 'high'
-  }>
+  feedback: PronunciationFeedback[]
+}
+
+// Main pronunciation exercise type
+export interface PronunciationExercise {
+  id: string
+  type: Extract<SkillType, 'pronunciation'>
+  status: ExerciseStatus
+  difficulty: DifficultyLevel
+  title: string
+  description: string
+  
+  // Core exercise content
+  video: VideoContent
+  practiceMaterial: PracticeMaterial
+  
+  // Exercise settings
+  settings: {
+    minRecordingDuration: number
+    maxRecordingDuration: number
+    attemptsAllowed: number
+    passingScore: number
+    allowSegmentRecording?: boolean // Optional: allow recording individual segments
+  }
+
+  // Exercise requirements
+  requirements: {
+    minAccuracy: number
+    minAttempts: number
+    focusAreas: PronunciationFocusArea[]
+  }
+
+  // Exercise metadata
+  estimatedDuration: string
+  focusAreas: string[] // Specific focus areas like 'phoneme-th', 'stress-patterns'
+  prerequisites: string[]
+  
+  // UI state tracking
+  progress?: {
+    videoWatched: boolean
+    currentSegment: number
+    attemptsUsed: number
+  }
+}
+
+// Progress tracking types
+export interface ExerciseProgressData {
+  exerciseId: string
+  completed: boolean
+  attempts: number
+  bestScore: number
+  lastAttempt: string | null
+  metrics: {
+    accuracy: number
+    completedAttempts: number
+    timeSpent: string
+    focusAreaProgress: Record<PronunciationFocusArea, {
+      accuracy: number
+      needsWork: boolean
+      attempts: number
+    }>
+  }
+  // Recent activity
+  recentActivity?: {
+    lastPracticeDate: string
+    currentStreak: number
+    totalPracticeDays: number
+  }
 }

@@ -1,5 +1,6 @@
 import type { IExercisingApi } from '../interfaces/IExercisingApi'
 import type { 
+  ExerciseProgressData,
   PronunciationExercise,
   PronunciationExerciseResult,
   RecordingAttempt,
@@ -43,40 +44,87 @@ export class MockExercisingApi implements IExercisingApi {
       type: 'pronunciation',
       status: 'available',
       difficulty: 'B1',
-      title: 'Mock Pronunciation Exercise',
-      description: 'Practice your pronunciation with this exercise',
+      title: 'The "TH" Sound in English',
+      description: 'Master the pronunciation of "th" sound in English with common words and phrases. Watch the video lesson first, then practice with the provided text.',
+      
+      // Learning video content
       video: {
-        videoId: 'mock-video-id',
-        title: 'Sample Video',
-        transcript: 'Sample transcript for practice',
-        highlights: []
+        videoId: '7CeNTtbhYLs',
+        title: 'How to Pronounce TH - English Pronunciation Guide',
+        transcript: `Today we're learning about the "th" sound in English.
+          There are two types of "th" sounds:
+          1. The voiced "th" as in "this", "that", and "brother"
+          2. The unvoiced "th" as in "think", "three", and "mouth"
+          Watch carefully as we demonstrate the correct tongue position and practice these sounds.`,
+        highlights: [
+          {
+            timestamp: 15,
+            text: "Voiced TH demonstration",
+            focus: 'phoneme'
+          },
+          {
+            timestamp: 45,
+            text: "Unvoiced TH demonstration",
+            focus: 'phoneme'
+          },
+          {
+            timestamp: 90,
+            text: "Common word practice",
+            focus: 'phoneme'
+          }
+        ]
       },
+
+      // Practice material (shown after video)
       practiceMaterial: {
-        text: 'Sample practice text',
-        segments: []
+        text: "Think about this: the weather is perfect for a Thursday afternoon at the theater.",
+        segments: [
+          {
+            text: "Think about this",
+            phonetic: "θɪŋk əˈbaʊt ðɪs",
+            focus: 'phoneme'
+          },
+          {
+            text: "the weather",
+            phonetic: "ðə ˈwɛðər",
+            focus: 'phoneme'
+          },
+          {
+            text: "is perfect for",
+            phonetic: "ɪz ˈpɜrfɪkt fɔr",
+            focus: 'stress'
+          },
+          {
+            text: "a Thursday afternoon",
+            phonetic: "eɪ ˈθɜrzdeɪ ˌæftərˈnun",
+            focus: 'stress'
+          },
+          {
+            text: "at the theater",
+            phonetic: "æt ðə ˈθiːətər",
+            focus: 'phoneme'
+          }
+        ]
       },
-      modelData: {
-        audioUrl: 'mock-audio-url',
-        phonemes: [],
-        stressPatterns: [],
-        intonation: {
-          pattern: 'rising',
-          description: 'Rising intonation pattern'
-        }
-      },
+
+      // Exercise configuration
       settings: {
         minRecordingDuration: 5,
         maxRecordingDuration: 30,
         attemptsAllowed: 3,
         passingScore: 70
       },
+
+      // Success criteria
       requirements: {
         minAccuracy: 70,
         minAttempts: 1,
         focusAreas: ['phoneme', 'stress', 'intonation']
       },
-      estimatedDuration: '5 minutes',
-      focusAreas: ['pronunciation', 'intonation'],
+
+      // Exercise metadata
+      estimatedDuration: '10 minutes',
+      focusAreas: ['pronunciation', 'phoneme-th', 'stress-patterns'],
       prerequisites: []
     }
   }
@@ -94,7 +142,7 @@ export class MockExercisingApi implements IExercisingApi {
     return {
       exerciseId: 'mock-exercise-id',
       timestamp: new Date().toISOString(),
-      recording,
+      recording: recording,
       completed: true,
       scores: {
         accuracy: 85,
@@ -131,8 +179,8 @@ export class MockExercisingApi implements IExercisingApi {
     )
   }
 
-  async getExerciseProgress(exerciseId: string) {
-    return this.handleMockRequest(
+  async getExerciseProgress(exerciseId: string){
+    return this.handleMockRequest<ExerciseProgressData>(
       `/exercises/${exerciseId}/progress`,
       'GET'
     )

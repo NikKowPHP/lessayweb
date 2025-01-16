@@ -1,6 +1,7 @@
 import { Api } from './Api'
 import type { IExercisingApi } from './interfaces/IExercisingApi'
 import type { 
+  ExerciseProgressData,
   PronunciationExercise,
   PronunciationExerciseResult,
   RecordingAttempt,
@@ -49,15 +50,10 @@ export class ExercisingApi extends Api implements IExercisingApi {
   }
 
   async getExerciseProgress(exerciseId: string): Promise<{
-    data: {
-      completed: boolean
-      attempts: number
-      bestScore: number
-      lastAttempt: string | null
-    }
+    data: ExerciseProgressData
   }> {
     const endpoint = ExercisingApi.ENDPOINTS.GET_PROGRESS.replace(':id', exerciseId)
-    const response = await this.get(endpoint)
+    const response = await this.get<ExerciseProgressData>(endpoint)
     return { data: response }
   }
 }

@@ -62,9 +62,19 @@ export default function PronunciationExercisePage() {
 
   const handleRecordingSubmit = async (recording: Blob) => {
     try {
+      // Convert Blob to base64
+      const base64Audio = await new Promise<string>((resolve) => {
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          const base64 = (reader.result as string).split(',')[1]
+          resolve(base64)
+        }
+        reader.readAsDataURL(recording)
+      })
+
       await dispatch(submitRecording({
         timestamp: new Date().toISOString(),
-        audioBlob: recording,
+        audioData: base64Audio, // Send base64 string instead of Blob
         duration: recording.size,
         exerciseId: exercise.id,
         segmentIndex: currentSegment

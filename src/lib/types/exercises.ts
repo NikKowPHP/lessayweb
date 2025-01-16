@@ -40,10 +40,10 @@ export interface PracticeMaterial {
 // User's recording attempt
 export interface RecordingAttempt {
   timestamp: string
-  audioBlob: Blob // Raw audio data to send to backend
   duration: number
   exerciseId: string
-  segmentIndex?: number // Optional: for segment-specific recording
+  segmentIndex: number
+  audioData?: string // Base64 string instead of Blob
 }
 
 // Feedback item for specific pronunciation issue

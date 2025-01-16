@@ -93,8 +93,13 @@ export class ExercisingService {
           recordingDuration: recording.duration
         })
 
+        // Remove audioData before storing in results if not needed
+        const { audioData, ...recordingWithoutAudio } = recording
         const response = await this.api.submitRecording(currentExercise.id, recording)
-        const result = response.data
+        const result = {
+          ...response.data,
+          recording: recordingWithoutAudio
+        }
 
         await exercisingStorage.setExerciseResult(result)
         

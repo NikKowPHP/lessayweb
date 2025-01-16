@@ -146,7 +146,11 @@ export class MockExercisingApi implements IExercisingApi {
     return {
       exerciseId: 'mock-exercise-id',
       timestamp: new Date().toISOString(),
-      recording: recording,
+      recording: {
+        ...recording,
+        // Don't include audioData in the result if you don't need it
+        audioData: undefined
+      },
       completed: true,
       scores: {
         accuracy: 85,

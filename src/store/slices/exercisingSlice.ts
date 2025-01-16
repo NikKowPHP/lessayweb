@@ -84,6 +84,16 @@ export const invalidateExercisesCache = createAsyncThunk(
   }
 )
 
+export const submitAllRecordings = createAsyncThunk(
+  'exercising/submitAllRecordings',
+  async (payload: {
+    exerciseId: string,
+    recordings: RecordingAttempt[]
+  }) => {
+    return await exercisingService.submitAllRecordings(payload)
+  }
+)
+
 const exercisingSlice = createSlice({
   name: 'exercising',
   initialState,
@@ -154,6 +164,17 @@ const exercisingSlice = createSlice({
       })
       .addCase(submitRecording.rejected, (state, action) => {
         state.error = action.error.message || 'Failed to submit recording'
+        state.isProcessing = false
+      })
+      .addCase(submitAllRecordings.pending, (state) => {
+        state.isProcessing = true
+      })
+      .addCase(submitAllRecordings.fulfilled, (state, action) => {
+        state.results = action.payload
+        state.isProcessing = false
+      })
+      .addCase(submitAllRecordings.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to submit recordings'
         state.isProcessing = false
       })
   }

@@ -10,7 +10,8 @@ import {
   selectError,
   startExercise,
   setVideoProgress,
-  submitRecording
+  submitRecording,
+  submitAllRecordings
 } from '@/store/slices/exercisingSlice'
 import { VideoPlayer } from '@/components/exercises/VideoPlayer'
 import { PracticeSection } from '@/components/exercises/PracticeSection'
@@ -29,6 +30,8 @@ export default function PronunciationExercisePage() {
   const [currentSegment, setCurrentSegment] = useState(0)
   const [showTranscript, setShowTranscript] = useState(false)
   const [playbackSpeed, setPlaybackSpeed] = useState(1)
+  const [recordings, setRecordings] = useState<Map<number, Blob>>(new Map())
+  const [isComplete, setIsComplete] = useState(false)
 
   useEffect(() => {
     if (id && !exercise) {
@@ -60,27 +63,51 @@ export default function PronunciationExercisePage() {
     setCurrentSegment(index)
   }
 
-  const handleRecordingSubmit = async (recording: Blob) => {
-    try {
-      // Convert Blob to base64
-      const base64Audio = await new Promise<string>((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const base64 = (reader.result as string).split(',')[1]
-          resolve(base64)
-        }
-        reader.readAsDataURL(recording)
-      })
+  const handleSegmentRecording = async (segmentIndex: number, recording: Blob) => {
+    setRecordings(prev => new Map(prev).set(segmentIndex, recording))
+    
+    // Check if all segments are recorded
+    const allSegmentsRecorded = exercise.practiceMaterial.segments.every(
+      (_, index) => recordings.has(index)
+    )
+    setIsComplete(allSegmentsRecorded)
+  }
 
-      await dispatch(submitRecording({
-        timestamp: new Date().toISOString(),
-        audioData: base64Audio, // Send base64 string instead of Blob
-        duration: recording.size,
+  const handleSubmitAll = async () => {
+    try {
+      const recordingPromises = Array.from(recordings.entries()).map(
+        async ([segmentIndex, blob]) => {
+          const base64Audio = await new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+              const base64 = (reader.result as string).split(',')[1]
+              resolve(base64)
+            }
+            reader.readAsDataURL(blob)
+          })
+
+          return {
+            segmentIndex,
+            audioData: base64Audio,
+            timestamp: new Date().toISOString(),
+            duration: blob.size,
+            exerciseId: exercise.id,
+          }
+        }
+      )
+
+      const recordingsData = await Promise.all(recordingPromises)
+      
+      await dispatch(submitAllRecordings({
         exerciseId: exercise.id,
-        segmentIndex: currentSegment
+        recordings: recordingsData
       })).unwrap()
+      
+      // Clear recordings after successful submission
+      setRecordings(new Map())
+      setIsComplete(false)
     } catch (error) {
-      console.error('Failed to submit recording:', error)
+      console.error('Failed to submit recordings:', error)
     }
   }
 
@@ -165,21 +192,61 @@ export default function PronunciationExercisePage() {
 
       {/* Practice Section - Only show after video is watched */}
       {videoProgress.hasWatched && (
-        <PracticeSection
-          material={exercise.practiceMaterial}
-          currentSegment={currentSegment}
-          onSegmentChange={handleSegmentChange}
-        />
-      )}
+        <>
+          <PracticeSection
+            material={exercise.practiceMaterial}
+            currentSegment={currentSegment}
+            onSegmentChange={handleSegmentChange}
+            recordings={recordings}
+          />
 
-      {/* Recording Section - Only show after practice is available */}
-      {videoProgress.hasWatched && (
-        <RecordingSection
-          exerciseId={exercise.id}
-          settings={exercise.settings}
-          onSubmit={handleRecordingSubmit}
-          currentSegment={currentSegment}
-        />
+          <div className="space-y-4 rounded-lg bg-white p-6 shadow-sm">
+            <h2 className="text-xl font-semibold text-gray-900">
+              Record Your Practice
+            </h2>
+            
+            <div className="space-y-4">
+              {/* Current segment recording section */}
+              <RecordingSection
+                exerciseId={exercise.id}
+                settings={exercise.settings}
+                onSubmit={(recording) => handleSegmentRecording(currentSegment, recording)}
+                currentSegment={currentSegment}
+                hasRecording={recordings.has(currentSegment)}
+              />
+
+              {/* Progress indicator */}
+              <div className="mt-4">
+                <h3 className="text-sm font-medium text-gray-700">Recording Progress</h3>
+                <div className="mt-2 flex gap-2">
+                  {exercise.practiceMaterial.segments.map((_, index) => (
+                    <div
+                      key={index}
+                      className={`h-2 w-full rounded ${
+                        recordings.has(index) 
+                          ? 'bg-green-500' 
+                          : 'bg-gray-200'
+                      }`}
+                    />
+                  ))}
+                </div>
+              </div>
+
+              {/* Submit all button */}
+              <button
+                onClick={handleSubmitAll}
+                disabled={!isComplete}
+                className={`mt-4 w-full rounded-md px-4 py-2 text-white
+                  ${isComplete 
+                    ? 'bg-blue-600 hover:bg-blue-700' 
+                    : 'bg-gray-400 cursor-not-allowed'
+                  }`}
+              >
+                Submit All Recordings
+              </button>
+            </div>
+          </div>
+        </>
       )}
     </div>
   )

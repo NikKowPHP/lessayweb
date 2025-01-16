@@ -9,6 +9,7 @@ const CURRENT_EXERCISE_KEY = 'current_exercise'
 const EXERCISE_RESULT_KEY = 'exercise_result'
 const EXERCISES_CACHE_KEY = 'exercises_cache'
 const CACHE_TIMESTAMP_KEY = 'exercises_cache_timestamp'
+const RECORDINGS_KEY = 'current_recordings'
 
 export const CACHE_DURATION = 1000 * 60 * 30 // 30 minutes
 
@@ -55,7 +56,8 @@ export class ExercisingStorage extends AbstractStorage {
   async clearExerciseSession(): Promise<void> {
     await Promise.all([
       this.remove(CURRENT_EXERCISE_KEY),
-      this.remove(EXERCISE_RESULT_KEY)
+      this.remove(EXERCISE_RESULT_KEY),
+      this.remove(RECORDINGS_KEY)
     ])
   }
 
@@ -82,6 +84,17 @@ export class ExercisingStorage extends AbstractStorage {
       this.remove(EXERCISES_CACHE_KEY),
       this.remove(CACHE_TIMESTAMP_KEY)
     ])
+  }
+
+  async getCurrentRecordings(): Promise<Map<number, string>> {
+    const recordings = await this.get<Record<number, string>>(RECORDINGS_KEY)
+    return recordings ? new Map(Object.entries(recordings).map(([k, v]) => [Number(k), v]))
+      : new Map()
+  }
+
+  async setCurrentRecordings(recordings: Map<number, string>): Promise<void> {
+    const recordingsObj = Object.fromEntries(recordings)
+    await this.set(RECORDINGS_KEY, recordingsObj)
   }
 }
 

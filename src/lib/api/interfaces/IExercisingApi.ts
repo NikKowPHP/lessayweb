@@ -34,4 +34,10 @@ export interface IExercisingApi {
   getExercisesList(): Promise<{ 
     data: PronunciationExercise[] 
   }>
+
+  // Submit all recordings for a single exercise
+  submitAllRecordings(
+    exerciseId: string,
+    recordings: RecordingAttempt[]
+  ): Promise<{ data: PronunciationExerciseResult }>
 } 

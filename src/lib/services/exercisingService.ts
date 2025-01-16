@@ -207,6 +207,45 @@ export class ExercisingService {
   async invalidateExercisesCache(): Promise<void> {
     await exercisingStorage.clearExercisesCache()
   }
+
+  async submitAllRecordings({
+    exerciseId,
+    recordings
+  }: {
+    exerciseId: string,
+    recordings: RecordingAttempt[]
+  }): Promise<PronunciationExerciseResult> {
+    try {
+      console.info('Submitting all recordings', { 
+        exerciseId,
+        recordingsCount: recordings.length
+      })
+
+      const response = await this.api.submitAllRecordings(exerciseId, recordings)
+      const result = response.data
+
+      // Store the result without audio data
+      const resultWithoutAudio = {
+        ...result,
+        recordings: result.recordings?.map(rec => {
+          const { audioData, ...recordingWithoutAudio } = rec
+          return recordingWithoutAudio
+        })
+      }
+      
+      await exercisingStorage.setExerciseResult(resultWithoutAudio)
+      
+      console.info('All recordings submitted successfully', {
+        exerciseId,
+        scores: result.scores
+      })
+
+      return result
+    } catch (error) {
+      console.error('Failed to submit recordings', error as Error)
+      throw new Error('Failed to submit recordings')
+    }
+  }
 }
 
 // Export singleton instance

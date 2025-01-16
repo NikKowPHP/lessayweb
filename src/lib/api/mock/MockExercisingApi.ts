@@ -38,6 +38,13 @@ export class MockExercisingApi implements IExercisingApi {
     if (path.includes('/recording') && method === 'POST') {
       return this.generateMockRecordingResult(body?.recording)
     }
+    
+    if (path.includes('/recordings') && method === 'POST') {
+      return this.generateMockAllRecordingsResult(
+        path.split('/')[2], // exerciseId
+        body?.recordings
+      )
+    }
 
     throw new Error(`Mock route not found: ${method} ${path}`)
   }
@@ -146,11 +153,13 @@ export class MockExercisingApi implements IExercisingApi {
     return {
       exerciseId: 'mock-exercise-id',
       timestamp: new Date().toISOString(),
-      recording: {
-        ...recording,
-        // Don't include audioData in the result if you don't need it
-        audioData: undefined
-      },
+      recordings: [
+        {
+          ...recording,
+          // Don't include audioData in the result if you don't need it
+          audioData: undefined
+        }
+      ],
       completed: true,
       scores: {
         accuracy: 85,
@@ -167,6 +176,35 @@ export class MockExercisingApi implements IExercisingApi {
           severity: 'low'
         }
       ]
+    }
+  }
+
+  private generateMockAllRecordingsResult(
+    exerciseId: string,
+    recordings: RecordingAttempt[]
+  ): PronunciationExerciseResult {
+    return {
+      exerciseId,
+      timestamp: new Date().toISOString(),
+      recordings: recordings.map(recording => ({
+        ...recording,
+        audioData: undefined // Remove audio data from result
+      })),
+      completed: true,
+      scores: {
+        accuracy: 85,
+        fluency: 80,
+        pronunciation: 75,
+        overall: 80
+      },
+      feedback: recordings.map((recording, index) => ({
+        segmentIndex: recording.segmentIndex,
+        timestamp: index * 1000, // Mock timestamp for each segment
+        type: 'phoneme',
+        issue: `Sample feedback for segment ${recording.segmentIndex + 1}`,
+        suggestion: 'Practice this sound more',
+        severity: 'low'
+      }))
     }
   }
 
@@ -204,5 +242,13 @@ export class MockExercisingApi implements IExercisingApi {
 
   async getExercisesList() {
     return this.handleMockRequest<PronunciationExercise[]>('/exercises', 'GET')
+  }
+
+  async submitAllRecordings(exerciseId: string, recordings: RecordingAttempt[]) {
+    return this.handleMockRequest<PronunciationExerciseResult>(
+      `/exercises/${exerciseId}/recordings`,
+      'POST',
+      { recordings }
+    )
   }
 }

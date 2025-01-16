@@ -39,11 +39,11 @@ export interface PracticeMaterial {
 
 // User's recording attempt
 export interface RecordingAttempt {
+  segmentIndex: number
   timestamp: string
+  audioData?: string // Base64 string
   duration: number
   exerciseId: string
-  segmentIndex: number
-  audioData?: string // Base64 string instead of Blob
 }
 
 // Feedback item for specific pronunciation issue
@@ -60,7 +60,7 @@ export interface PronunciationFeedback {
 export interface PronunciationExerciseResult {
   exerciseId: string
   timestamp: string
-  recording: RecordingAttempt
+  recordings?: RecordingAttempt[] // Updated to support multiple recordings
   completed: boolean
   scores: {
     accuracy: number
@@ -68,7 +68,14 @@ export interface PronunciationExerciseResult {
     pronunciation: number
     overall: number
   }
-  feedback: PronunciationFeedback[]
+  feedback: Array<{
+    segmentIndex?: number // Added to identify segment
+    timestamp: number
+    type: string
+    issue: string
+    suggestion: string
+    severity: 'low' | 'medium' | 'high'
+  }>
 }
 
 // Main pronunciation exercise type

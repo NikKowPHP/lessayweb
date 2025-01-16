@@ -4,7 +4,7 @@ import {
   RecordingAttempt,
   VideoContent 
 } from '@/lib/types/exercises'
-import { exercisingStorage } from './exercisingStorage'
+import { CACHE_DURATION, exercisingStorage } from './exercisingStorage'
 import type { IExercisingApi } from '@/lib/api/interfaces/IExercisingApi'
 import { MockExercisingApi } from '@/lib/api/mock/MockExercisingApi'
 import { ExercisingApi } from '@/lib/api/ExercisingApi'

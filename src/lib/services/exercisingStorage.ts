@@ -10,7 +10,7 @@ const EXERCISE_RESULT_KEY = 'exercise_result'
 const EXERCISES_CACHE_KEY = 'exercises_cache'
 const CACHE_TIMESTAMP_KEY = 'exercises_cache_timestamp'
 
-const CACHE_DURATION = 1000 * 60 * 30 // 30 minutes
+export const CACHE_DURATION = 1000 * 60 * 30 // 30 minutes
 
 export class ExercisingStorage extends AbstractStorage {
   private static instance: ExercisingStorage
@@ -40,7 +40,7 @@ export class ExercisingStorage extends AbstractStorage {
     return await this.get<PronunciationExercise>(CURRENT_EXERCISE_KEY)
   }
 
-  async setCurrentExercise(exercise: PronunciationExercise): Promise<void> {
+  async setCurrentExercise(exercise: PronunciationExercise | null): Promise<void> {
     await this.set(CURRENT_EXERCISE_KEY, exercise)
   }
 
@@ -48,7 +48,7 @@ export class ExercisingStorage extends AbstractStorage {
     return await this.get<PronunciationExerciseResult>(EXERCISE_RESULT_KEY)
   }
 
-  async setExerciseResult(result: PronunciationExerciseResult): Promise<void> {
+  async setExerciseResult(result: PronunciationExerciseResult | null): Promise<void> {
     await this.set(EXERCISE_RESULT_KEY, result)
   }
 

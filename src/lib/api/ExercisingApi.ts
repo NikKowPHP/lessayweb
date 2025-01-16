@@ -15,6 +15,7 @@ export class ExercisingApi extends Api implements IExercisingApi {
     GET_VIDEO_CONTENT: '/exercises/video/:id',
     SUBMIT_RECORDING: '/exercises/:id/recording',
     GET_PROGRESS: '/exercises/:id/progress',
+    GET_EXERCISES_LIST: '/exercises'
   } as const
 
   private constructor() {
@@ -54,6 +55,14 @@ export class ExercisingApi extends Api implements IExercisingApi {
   }> {
     const endpoint = ExercisingApi.ENDPOINTS.GET_PROGRESS.replace(':id', exerciseId)
     const response = await this.get<ExerciseProgressData>(endpoint)
+    return { data: response }
+  }
+
+  async getExercisesList(): Promise<{
+    data: PronunciationExercise[]
+  }> {
+    const endpoint = ExercisingApi.ENDPOINTS.GET_EXERCISES_LIST
+    const response = await this.get<PronunciationExercise[]>(endpoint)
     return { data: response }
   }
 }

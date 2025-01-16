@@ -185,4 +185,8 @@ export class MockExercisingApi implements IExercisingApi {
       'GET'
     )
   }
+
+  async getExercisesList() {
+    return this.handleMockRequest<PronunciationExercise[]>('/exercises', 'GET')
+  }
 }

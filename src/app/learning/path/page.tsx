@@ -19,9 +19,11 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { PathNode } from './components/PathNode'
 import { generateTimelineElements } from './helpers/pathElementsGenerator'
+import { useRouter } from 'next/navigation'
 
 function LearningPath() {
   const dispatch = useAppDispatch()
+  const router = useRouter()
   const currentPath = useAppSelector(selectCurrentPath)
   const isLoading = useAppSelector(selectIsLoading)
 
@@ -33,8 +35,9 @@ function LearningPath() {
     if (element.type === 'exercise') {
       dispatch(setCurrentExercise(element.item))
     }
-  }, [dispatch])
-
+    router.push(`/exercises/${element.item.type}/${element.item.id}`)
+  }, [dispatch, router])
+  
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">

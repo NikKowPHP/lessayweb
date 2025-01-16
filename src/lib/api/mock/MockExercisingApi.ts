@@ -23,6 +23,10 @@ export class MockExercisingApi implements IExercisingApi {
 
   private async getMockData(path: string, method: string, body?: any): Promise<any> {
     // Mock data generation based on request
+    if (path === '/exercises' && method === 'GET') {
+      return this.generateMockExercisesList()
+    }
+    
     if (path.includes('/exercises/') && method === 'GET') {
       return this.generateMockExercise(path.split('/').pop() || '')
     }
@@ -160,6 +164,14 @@ export class MockExercisingApi implements IExercisingApi {
         }
       ]
     }
+  }
+
+  private generateMockExercisesList(): PronunciationExercise[] {
+    return [
+      this.generateMockExercise('th-sounds'),
+      this.generateMockExercise('r-sounds'),
+      this.generateMockExercise('l-sounds'),
+    ]
   }
 
   // IExercisingApi implementation

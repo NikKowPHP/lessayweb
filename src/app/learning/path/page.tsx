@@ -1,15 +1,11 @@
 'use client'
 
 import { useCallback, useEffect } from 'react'
-import ReactFlow, { 
-  Background,
-  Controls,
-  Node,
-  Edge,
-  Position,
-  ReactFlowProvider
-} from 'reactflow'
-import 'reactflow/dist/style.css'
+import { 
+  VerticalTimeline, 
+  VerticalTimelineElement 
+} from 'react-vertical-timeline-component'
+import 'react-vertical-timeline-component/style.min.css'
 import { motion } from 'framer-motion'
 import { useAppSelector, useAppDispatch } from '@/store/hooks'
 import { 
@@ -22,25 +18,20 @@ import {
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 import { ErrorAlert } from '@/components/ui/ErrorAlert'
 import { PathNode } from './components/PathNode'
-import { generatePathElements } from './helpers/pathElementsGenerator'
-
-const nodeTypes = {
-  pathNode: PathNode
-}
+import { generateTimelineElements } from './helpers/pathElementsGenerator'
 
 function LearningPath() {
   const dispatch = useAppDispatch()
   const currentPath = useAppSelector(selectCurrentPath)
-  const skillLevels = useAppSelector(selectSkillLevels)
   const isLoading = useAppSelector(selectIsLoading)
 
   useEffect(() => {
     dispatch(rehydrateLearningState())
   }, [dispatch])
 
-  const handleNodeClick = useCallback((_ : any, node: Node) => {
-    if (node.data?.exercise) {
-      dispatch(setCurrentExercise(node.data.exercise))
+  const handleElementClick = useCallback((element: any) => {
+    if (element.type === 'exercise') {
+      dispatch(setCurrentExercise(element.item))
     }
   }, [dispatch])
 
@@ -63,41 +54,32 @@ function LearningPath() {
     )
   }
 
-  // Generate nodes and edges from the learning path
-  const { nodes, edges } = generatePathElements(currentPath)
+  const timelineElements = generateTimelineElements(currentPath)
 
   return (
-    
     <motion.div 
-      className="mt-22 h-[800px] w-full"
+      className="mt-8 pb-16"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
-      <ReactFlow
-        nodes={nodes}
-        edges={edges}
-        nodeTypes={nodeTypes}
-        onNodeClick={handleNodeClick}
-        fitView
-        className="bg-gray-50 dark:bg-gray-900"
-        defaultEdgeOptions={{
-          type: 'smoothstep',
-          animated: true
-        }}
-      >
-        <Background />
-        <Controls />
-      </ReactFlow>
+      <VerticalTimeline lineColor="#94a3b8">
+        {timelineElements.map((element) => (
+          <VerticalTimelineElement
+            key={element.id}
+            className={`vertical-timeline-element--${element.type}`}
+            contentStyle={element.contentStyle}
+            contentArrowStyle={element.contentArrowStyle}
+            iconStyle={element.iconStyle}
+            icon={element.icon}
+            onTimelineElementClick={() => handleElementClick(element)}
+          >
+            <PathNode data={element.data} />
+          </VerticalTimelineElement>
+        ))}
+      </VerticalTimeline>
     </motion.div>
   )
 }
 
-// Wrap with provider
-export default function LearningPathPage() {
-  return (
-    <ReactFlowProvider>
-      <LearningPath />
-    </ReactFlowProvider>
-  )
-}
+export default LearningPath

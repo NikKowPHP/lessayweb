@@ -1,9 +1,9 @@
 import { memo } from 'react'
-import { Handle, Position } from 'reactflow'
 import { Badge } from '@/components/ui/Badge'
 import { getSkillColor, getSkillIcon } from '@/lib/utils/skillColors'
 import { cn } from '@/lib/utils/cn'
 import { SkillType } from '@/lib/types/learningPath'
+import { LucideProps } from 'lucide-react'
 
 interface PathNodeProps {
   data: {
@@ -17,6 +17,7 @@ interface PathNodeProps {
       progress: number
       criticalPoints?: string[]
     }>
+    description?: string
   }
 }
 
@@ -78,72 +79,53 @@ const ProgressBar = ({
   )
 }
 
+const SkillIconWrapper = ({ icon: Icon }: { icon: React.ComponentType<LucideProps> }) => (
+  <Icon size={16} className="mr-1" />
+)
+
 export const PathNode = memo(({ data }: PathNodeProps) => {
-  const statusColors = {
-    locked: 'bg-gray-200 dark:bg-gray-700 cursor-not-allowed',
-    available: 'bg-blue-500 dark:bg-blue-400 cursor-pointer',
-    in_progress: 'bg-blue-500 dark:bg-blue-400 cursor-pointer',
-    completed: 'bg-green-500 dark:bg-green-400 cursor-pointer'
-  }
-
   return (
-    <div className={cn(
-      'px-4 py-3 rounded-lg shadow-md',
-      data.type === 'assessment' ? 'w-[400px]' : 'w-[200px]',
-      'border-2 transition-all duration-200',
-      data.status === 'locked' ? 'opacity-50' : 'hover:scale-105',
-      statusColors[data.status]
-    )}>
-      <Handle 
-        type="target" 
-        position={Position.Top} 
-        className="!bg-gray-400 dark:!bg-gray-600"
-      />
+    <div className="flex flex-col gap-3">
+      <h3 className="vertical-timeline-element-title font-semibold">
+        {data.label}
+      </h3>
+      {data.description && (
+        <p className="vertical-timeline-element-subtitle text-sm opacity-90">
+          {data.description}
+        </p>
+      )}
       
-      <div className="flex flex-col gap-3">
-        <h3 className="font-semibold text-sm text-white">
-          {data.label}
-        </h3>
-        
-        {data.type === 'assessment' && data.skillProgress ? (
-          <div className="flex flex-col gap-4">
-            {Object.entries(data.skillProgress).map(([skill, progress]) => (
-              <ProgressBar
+      {data.type === 'assessment' && data.skillProgress ? (
+        <div className="flex flex-col gap-4">
+          {Object.entries(data.skillProgress).map(([skill, progress]) => (
+            <ProgressBar
+              key={skill}
+              skill={skill as SkillType}
+              progress={progress.progress || 0}
+              currentLevel={progress.currentLevel}
+              targetLevel={progress.targetLevel}
+              criticalPoints={progress.criticalPoints}
+            />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-1 mt-2">
+          {data.skills.map(skill => {
+            const Icon = getSkillIcon(skill)
+            return (
+              <Badge
                 key={skill}
-                skill={skill as SkillType}
-                progress={progress.progress}
-                currentLevel={progress.currentLevel}
-                targetLevel={progress.targetLevel}
-                criticalPoints={progress.criticalPoints}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="flex flex-wrap gap-1">
-            {data.skills.map(skill => {
-              const SkillIcon = getSkillIcon(skill)
-              const color = getSkillColor(skill)
-              return (
-                <Badge
-                  key={skill}
-                  color={color}
-                  size="sm"
-                  variant="soft"
-                  icon={<SkillIcon className="w-3 h-3" />}
-                >
-                  {skill}
-                </Badge>
-              )
-            })}
-          </div>
-        )}
-      </div>
-
-      <Handle 
-        type="source" 
-        position={Position.Bottom}
-        className="!bg-gray-400 dark:!bg-gray-600" 
-      />
+                color={getSkillColor(skill)}
+                size="sm"
+                variant="soft"
+                icon={<SkillIconWrapper icon={Icon} />}
+              >
+                {skill}
+              </Badge>
+            )
+          })}
+        </div>
+      )}
     </div>
   )
 })

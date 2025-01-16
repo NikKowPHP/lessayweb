@@ -150,6 +150,29 @@ export class MockExercisingApi implements IExercisingApi {
   }
 
   private generateMockRecordingResult(recording: RecordingAttempt): PronunciationExerciseResult {
+    const feedback = [
+      {
+        timestamp: 0,
+        type: 'phoneme',
+        issue: 'Pronunciation of "th" sound is unclear.',
+        suggestion: 'Try to emphasize the "th" sound more clearly.',
+        severity: 'medium'
+      },
+      {
+        timestamp: 1,
+        type: 'stress',
+        issue: 'Incorrect stress on the word "theater".',
+        suggestion: 'Make sure to stress the first syllable: "THE-a-ter".',
+        severity: 'low'
+      },
+      {
+        timestamp: 2,
+        type: 'intonation',
+        issue: 'Intonation is flat throughout the sentence.',
+        suggestion: 'Try to vary your intonation to make it more engaging.',
+        severity: 'high'
+      }
+    ];
     return {
       exerciseId: 'mock-exercise-id',
       timestamp: new Date().toISOString(),
@@ -167,15 +190,14 @@ export class MockExercisingApi implements IExercisingApi {
         pronunciation: 75,
         overall: 80
       },
-      feedback: [
-        {
-          timestamp: 0,
-          type: 'phoneme',
-          issue: 'Sample feedback',
-          suggestion: 'Practice this sound more',
-          severity: 'low'
-        }
-      ]
+      feedback: feedback.map((item, index) => ({
+        segmentIndex: recording.segmentIndex,
+        timestamp: item.timestamp + index * 1000, // Increment timestamp for each feedback item
+        type: item.type,
+        issue: item.issue,
+        suggestion: item.suggestion,
+        severity: item.severity as 'low' | 'medium' | 'high'
+      }))
     }
   }
 
